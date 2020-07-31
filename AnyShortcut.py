@@ -159,7 +159,8 @@ def run(context):
         if dropdown_:
             dropdown_.deleteMe()
         
-        dropdown_ = panel.controls.addDropDown(NAME, '', MENU_DROPDOWN_ID)
+        dropdown_ = panel.controls.addDropDown(f'{NAME} v{manifest_["version"]}',
+                                               '', MENU_DROPDOWN_ID)
         
         global enable_cmd_def_
         enable_cmd_def_ = ui_.commandDefinitions.itemById(ENABLE_CMD_DEF_ID)
