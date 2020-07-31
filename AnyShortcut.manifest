@@ -1,0 +1,13 @@
+{
+	"autodeskProduct":	"Fusion360",
+	"type":	"addin",
+	"id":	"4d6f3565-0ffc-4a1b-a0c5-86053175ec2f",
+	"author":	"Thomas Axelsson",
+	"description":	{
+		"":	"Shows a menu that let's you assign shortcuts to your last run commands."
+	},
+	"version":	"0.1",
+	"runOnStartup":	false,
+	"supportedOS":	"windows|mac",
+	"editEnabled":	true
+}
