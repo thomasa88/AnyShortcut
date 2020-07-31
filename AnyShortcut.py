@@ -60,7 +60,7 @@ cmd_def_history_ = deque()
 # Keeping info in a separate container, as the search is much faster
 # if we can do cmd_def in cmd_def_history, not making the GUI sluggish.
 cmd_controls_ = deque()
-MAX_TRACK = 5
+MAX_TRACK = 10
 track_count_ = 0
 tracking_ = False
 
@@ -136,7 +136,7 @@ def stop_tracking():
 
 def update_enable_text():
     if tracking_:
-        text = f'Enable tracking (stops after {MAX_TRACK - track_count_} commands)'
+        text = f'Enable tracking (stopping after {MAX_TRACK - track_count_} commands)'
         enable_cmd_def_.resourceFolder = thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Base/Resources/Browser/CheckBoxChecked'
     else:
         text = f'Enable tracking (stops after {MAX_TRACK} unique commands)'
