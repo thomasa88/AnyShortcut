@@ -161,6 +161,7 @@ def run(context):
         
         dropdown_ = panel.controls.addDropDown(f'{NAME} v{manifest_["version"]}',
                                                '', MENU_DROPDOWN_ID)
+        dropdown_.resourceFolder = './resources/anyshortcut'
         
         global enable_cmd_def_
         enable_cmd_def_ = ui_.commandDefinitions.itemById(ENABLE_CMD_DEF_ID)
