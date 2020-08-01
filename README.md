@@ -9,6 +9,8 @@ When enabled, the add-in tracks the resulting commands of actions that the user 
 ![Screenshot](screenshot.png)
 
 ## Installation
+Download the add-in from the [Releases](https://github.com/thomasa88/AnyShortcut/releases) page.
+
 Drop the files in `%appdata%\Autodesk\Autodesk Fusion 360\API\AddIns` .
 
 Make sure the directory is named `AnyShortcut`, with no suffix.
