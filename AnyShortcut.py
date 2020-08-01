@@ -184,14 +184,6 @@ def run(context):
         dropdown_.controls.addCommand(enable_cmd_def_)
         dropdown_.controls.addSeparator()
 
-        #cannot attach to native commands?
-        # roll = ui_.commandDefinitions.itemById('FusionRollCommand')
-        # events_manager_.add_handler(roll.commandCreated,
-        #                             adsk.core.CommandCreatedEventHandler,
-        #                             rollf)
-        
-        ui_.commandDefinitions.itemById('OrbitCommand').execute()
-
 def stop(context):
     with error_catcher_:
         events_manager_.clean_up()
