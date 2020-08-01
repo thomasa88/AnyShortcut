@@ -27,3 +27,19 @@ To set up a shortcut:
 
 To remove a shortcut, follow the same procedure. Hint: You can press the shortcut to trigger the command to be run.
 
+## Some Commands to map
+
+Here is a table of some commands that can be interesting to map, including a suggested key.
+
+| Key  | Command                  | Notes                                                        |
+| ---- | ------------------------ | ------------------------------------------------------------ |
+| F2   | Rename, in the timeline  | Let's you select an item in the timeline and press F2 to rename it. I have not found any way to do this in the browser. |
+|      | Look at (bottom toolbar) | Select a face and orient the view normal to it. I have not found any way to tell it to "Look at" the current. |
+|      | Isolate                  |                                                              |
+|      | Find in Browser          |                                                              |
+|      | Find in Window           |                                                              |
+|      | Activate Component       | Works in the Browser and in the 3D space, but you must have selected a component in 3D space, not a body or a face. |
+
+## Finding out what keys you have mapped
+
+See [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimple/blob/master/README.md).
