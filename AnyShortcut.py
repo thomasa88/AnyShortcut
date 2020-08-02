@@ -145,7 +145,7 @@ def stop_tracking():
 
 def update_enable_text():
     if tracking_:
-        text = f'Enable tracking (stopping after {MAX_TRACK - track_count_} commands)'
+        text = f'Enable tracking (stopping after {MAX_TRACK - track_count_} more unique commands)'
         enable_cmd_def_.resourceFolder = thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Base/Resources/Browser/CheckBoxChecked'
     else:
         text = f'Enable tracking (stops after {MAX_TRACK} unique commands)'
@@ -179,6 +179,15 @@ def look_at_sketch_or_selected_handler(args):
             look_at_sketch_handler(args)
     else:
         ui_.commandDefinitions.itemById('LookAtCommand').execute()
+
+def activate_containing_component_handler(args):
+    if ui_.activeSelections.count == 1:
+        selected = ui_.activeSelections[0].entity
+        if selected.classType() not in ['adsk::fusion::Component', 'adsk::fusion::Occurrence']:
+            ui_.activeSelections.clear()
+            ui_.activeSelections.add(selected.assemblyContext)
+        ui_.commandDefinitions.itemById('FusionActivateLocalCompCmd').execute()
+        ui_.commandDefinitions.itemById('FindInBrowser').execute()
 
 def delayed_event_handler(args):
     args = adsk.core.CustomEventArgs.cast(args)
@@ -262,33 +271,45 @@ def run(context):
                                                '', MENU_DROPDOWN_ID)
         dropdown_.resourceFolder = './resources/anyshortcut'
         
-        c = ui_.commandDefinitions.itemById('thomasa88_anyShortcutListLookAtSketchCommand')
-        if c:
-            c.deleteMe()
-        c = ui_.commandDefinitions.addButtonDefinition(
-            'thomasa88_anyShortcutListLookAtSketchCommand',
-            f'Look At Sketch',
-            '',
-            thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Commands/Resources/Camera/LookAt')
-        events_manager_.add_handler(c.commandCreated,
-                                    adsk.core.CommandCreatedEventHandler,
-                                    look_at_sketch_handler)
+        def create(cmd_def_id, text, tooltip, resource_folder, handler):
+            cmd_def = ui_.commandDefinitions.itemById(cmd_def_id)
+            if cmd_def:
+                cmd_def.deleteMe()
+            cmd_def = ui_.commandDefinitions.addButtonDefinition(
+                cmd_def_id, text, tooltip, resource_folder)
+            events_manager_.add_handler(cmd_def.commandCreated,
+                                        adsk.core.CommandCreatedEventHandler,
+                                        handler)
+            return cmd_def
+
+        c = create('thomasa88_anyShortcutListLookAtSketchCommand',
+                  'Look At Sketch',
+                  'Rotates the view to look at the sketch currently being edited. ' + 
+                   'No action is performed if a sketch is not being edited.',
+                  thomasa88lib.utils.get_fusion_deploy_folder() +
+                   '/Neutron/UI/Commands/Resources/Camera/LookAt',
+                  look_at_sketch_handler)
         dropdown_.controls.addCommand(c)
 
-        d = ui_.commandDefinitions.itemById('thomasa88_anyShortcutListLookAtSketchOrSelectedCommand')
-        if d:
-            d.deleteMe()
-        d = ui_.commandDefinitions.addButtonDefinition(
-            'thomasa88_anyShortcutListLookAtSketchOrSelectedCommand',
-            f'Look At Selected or Sketch',
-            '',
-            thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Commands/Resources/Camera/LookAt')
-        events_manager_.add_handler(d.commandCreated,
-                                    adsk.core.CommandCreatedEventHandler,
-                                    look_at_sketch_or_selected_handler)
-        dropdown_.controls.addCommand(d)
+        c = create('thomasa88_anyShortcutListLookAtSketchOrSelectedCommand',
+                   'Look At Selected or Sketch',
+                   'Rotates the view to look at, in priority order:\n' +
+                    ' 1. The selected object, if any\n' +
+                    ' 2. The sketch being edited',
+                   thomasa88lib.utils.get_fusion_deploy_folder() +
+                    '/Neutron/UI/Commands/Resources/Camera/LookAt',
+                   look_at_sketch_or_selected_handler)
+        dropdown_.controls.addCommand(c)
 
-        ### add: Look At Sketch or Selected
+        c = create('thomasa88_anyShortcutListActivateContainingOrComponentCommand',
+                  'Activate (containing) Component',
+                  'Activates the selected component. If no component is selected, '
+                   + 'the component directly containing the selected object is activated.',
+                  thomasa88lib.utils.get_fusion_deploy_folder() +
+                   '/Fusion/UI/FusionUI/Resources/Assembly/Activate',
+                  activate_containing_component_handler)
+        dropdown_.controls.addCommand(c)
+        
         ### roll back/fwd, start, end. call the roll command to get correct undo history
 
         dropdown_.controls.addSeparator()
