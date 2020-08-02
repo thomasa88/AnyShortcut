@@ -48,6 +48,7 @@ importlib.reload(thomasa88lib.timeline)
 
 ENABLE_CMD_DEF_ID = 'thomasa88_anyShortcutList'
 MENU_DROPDOWN_ID = 'thomasa88_anyShortcutDropdown'
+BUILTIN_DROPDOWN_ID = 'thomasa88_anyShortcutPremadeDropdown'
 DELAYED_EVENT_ID = 'thomasa88_anyShortcutEndOfQueueEvent'
 
 app_ = None
@@ -147,10 +148,10 @@ def stop_tracking():
 
 def update_enable_text():
     if tracking_:
-        text = f'Enable tracking (stopping after {MAX_TRACK - track_count_} more unique commands)'
+        text = f'Enable tracking ({MAX_TRACK - track_count_} more unique commands)'
         enable_cmd_def_.resourceFolder = thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Base/Resources/Browser/CheckBoxChecked'
     else:
-        text = f'Enable tracking (stops after {MAX_TRACK} unique commands)'
+        text = f'Enable tracking ({MAX_TRACK} unique commands)'
         enable_cmd_def_.resourceFolder = thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Base/Resources/Browser/CheckBoxUnchecked'
     enable_cmd_def_.controlDefinition.name = text
 
@@ -249,7 +250,6 @@ def on_command_terminate(command_id, termination_reason, func):
     
     termination_funcs_.append((command_id, termination_reason, func))   
 
-
 def command_terminated_handler(args):
     global termination_handler_info_
 
@@ -270,6 +270,92 @@ def command_terminated_handler(args):
     if len(termination_funcs_) == 0:
         events_manager_.remove_handler(termination_handler_info_)
         termination_handler_info_ = None
+
+def add_builtin_dropdown(parent):
+    builtin_dropdown_ = dropdown_.controls.itemById(BUILTIN_DROPDOWN_ID)       
+    builtin_dropdown_ = dropdown_.controls.addDropDown('Built-in Commands',
+                                            '', BUILTIN_DROPDOWN_ID)
+    #builtin_dropdown_.resourceFolder = './resources/anyshortcut'
+
+    def create(cmd_def_id, text, tooltip, resource_folder, handler):
+        cmd_def = ui_.commandDefinitions.itemById(cmd_def_id)
+        if cmd_def:
+            cmd_def.deleteMe()
+        cmd_def = ui_.commandDefinitions.addButtonDefinition(
+            cmd_def_id, text, tooltip, resource_folder)
+        events_manager_.add_handler(cmd_def.commandCreated,
+                                    adsk.core.CommandCreatedEventHandler,
+                                    handler)
+        return cmd_def
+
+    c = create('thomasa88_anyShortcutListLookAtSketchCommand',
+                'Look At Sketch',
+                'Rotates the view to look at the sketch currently being edited. ' + 
+                'No action is performed if a sketch is not being edited.',
+                thomasa88lib.utils.get_fusion_deploy_folder() +
+                '/Neutron/UI/Commands/Resources/Camera/LookAt',
+                look_at_sketch_handler)
+    builtin_dropdown_.controls.addCommand(c)
+
+    c = create('thomasa88_anyShortcutListLookAtSketchOrSelectedCommand',
+                'Look At Selected or Sketch',
+                'Rotates the view to look at, in priority order:\n' +
+                ' 1. The selected object, if any\n' +
+                ' 2. The sketch being edited',
+                thomasa88lib.utils.get_fusion_deploy_folder() +
+                '/Neutron/UI/Commands/Resources/Camera/LookAt',
+                look_at_sketch_or_selected_handler)
+    builtin_dropdown_.controls.addCommand(c)
+
+    c = create('thomasa88_anyShortcutListActivateContainingOrComponentCommand',
+                'Activate (containing) Component',
+                'Activates the selected component. If no component is selected, '
+                + 'the component directly containing the selected object is activated.',
+                thomasa88lib.utils.get_fusion_deploy_folder() +
+                '/Fusion/UI/FusionUI/Resources/Assembly/Activate',
+                activate_containing_component_handler)
+    builtin_dropdown_.controls.addCommand(c)
+
+    c = create('thomasa88_anyShortcutListRollToBeginning',
+                'Roll History Marker to Beginning',
+                '',
+                thomasa88lib.utils.get_fusion_deploy_folder() +
+                '/Fusion/UI/FusionUI/Resources/Timeline/RollBegin',
+                create_roll_history_handler('moveToBeginning'))
+    builtin_dropdown_.controls.addCommand(c)
+
+    c = create('thomasa88_anyShortcutListRollBack',
+                'Roll History Marker Back',
+                '',
+                thomasa88lib.utils.get_fusion_deploy_folder() +
+                '/Fusion/UI/FusionUI/Resources/Timeline/RollBack',
+                create_roll_history_handler('moveToPreviousStep'))
+    builtin_dropdown_.controls.addCommand(c)
+    
+    c = create('thomasa88_anyShortcutListRollForward',
+                'Roll History Marker Forward',
+                '',
+                thomasa88lib.utils.get_fusion_deploy_folder() +
+                '/Fusion/UI/FusionUI/Resources/Timeline/RollFwd',
+                create_roll_history_handler('movetoNextStep'))
+    builtin_dropdown_.controls.addCommand(c)
+
+    c = create('thomasa88_anyShortcutListRollToEnd',
+        'Roll History Marker to End',
+        '',
+        thomasa88lib.utils.get_fusion_deploy_folder() +
+        '/Fusion/UI/FusionUI/Resources/Timeline/RollEnd',
+        create_roll_history_handler('moveToEnd'))
+    builtin_dropdown_.controls.addCommand(c)
+
+    # timeline.play() just seems to skip to the end. Disabled.
+    # c = create('thomasa88_anyShortcutListHistoryPlay',
+    #     'Play History from Current Position',
+    #     '',
+    #     thomasa88lib.utils.get_fusion_deploy_folder() +
+    #     '/Fusion/UI/FusionUI/Resources/Timeline/RollPlay',
+    #     create_roll_history_handler('play'))
+    # builtin_dropdown_.controls.addCommand(c)
 
 def run(context):
     global app_
@@ -295,88 +381,10 @@ def run(context):
                                                '', MENU_DROPDOWN_ID)
         dropdown_.resourceFolder = './resources/anyshortcut'
         
-        def create(cmd_def_id, text, tooltip, resource_folder, handler):
-            cmd_def = ui_.commandDefinitions.itemById(cmd_def_id)
-            if cmd_def:
-                cmd_def.deleteMe()
-            cmd_def = ui_.commandDefinitions.addButtonDefinition(
-                cmd_def_id, text, tooltip, resource_folder)
-            events_manager_.add_handler(cmd_def.commandCreated,
-                                        adsk.core.CommandCreatedEventHandler,
-                                        handler)
-            return cmd_def
-
-        c = create('thomasa88_anyShortcutListLookAtSketchCommand',
-                  'Look At Sketch',
-                  'Rotates the view to look at the sketch currently being edited. ' + 
-                   'No action is performed if a sketch is not being edited.',
-                  thomasa88lib.utils.get_fusion_deploy_folder() +
-                   '/Neutron/UI/Commands/Resources/Camera/LookAt',
-                  look_at_sketch_handler)
-        dropdown_.controls.addCommand(c)
-
-        c = create('thomasa88_anyShortcutListLookAtSketchOrSelectedCommand',
-                   'Look At Selected or Sketch',
-                   'Rotates the view to look at, in priority order:\n' +
-                    ' 1. The selected object, if any\n' +
-                    ' 2. The sketch being edited',
-                   thomasa88lib.utils.get_fusion_deploy_folder() +
-                    '/Neutron/UI/Commands/Resources/Camera/LookAt',
-                   look_at_sketch_or_selected_handler)
-        dropdown_.controls.addCommand(c)
-
-        c = create('thomasa88_anyShortcutListActivateContainingOrComponentCommand',
-                  'Activate (containing) Component',
-                  'Activates the selected component. If no component is selected, '
-                   + 'the component directly containing the selected object is activated.',
-                  thomasa88lib.utils.get_fusion_deploy_folder() +
-                   '/Fusion/UI/FusionUI/Resources/Assembly/Activate',
-                  activate_containing_component_handler)
-        dropdown_.controls.addCommand(c)
-
-        c = create('thomasa88_anyShortcutListRollToBeginning',
-                  'Roll History Marker to Beginning',
-                  '',
-                  thomasa88lib.utils.get_fusion_deploy_folder() +
-                   '/Fusion/UI/FusionUI/Resources/Timeline/RollBegin',
-                  create_roll_history_handler('moveToBeginning'))
-        dropdown_.controls.addCommand(c)
-
-        c = create('thomasa88_anyShortcutListRollBack',
-                  'Roll History Marker Back',
-                  '',
-                  thomasa88lib.utils.get_fusion_deploy_folder() +
-                   '/Fusion/UI/FusionUI/Resources/Timeline/RollBack',
-                  create_roll_history_handler('moveToPreviousStep'))
-        dropdown_.controls.addCommand(c)
-        
-        c = create('thomasa88_anyShortcutListRollForward',
-                  'Roll History Marker Forward',
-                  '',
-                  thomasa88lib.utils.get_fusion_deploy_folder() +
-                  '/Fusion/UI/FusionUI/Resources/Timeline/RollFwd',
-                  create_roll_history_handler('movetoNextStep'))
-        dropdown_.controls.addCommand(c)
-
-        c = create('thomasa88_anyShortcutListRollToEnd',
-            'Roll History Marker to End',
-            '',
-            thomasa88lib.utils.get_fusion_deploy_folder() +
-            '/Fusion/UI/FusionUI/Resources/Timeline/RollEnd',
-            create_roll_history_handler('moveToEnd'))
-        dropdown_.controls.addCommand(c)
-
-        # timeline.play() just seems to skip to the end. Disabled.
-        # c = create('thomasa88_anyShortcutListHistoryPlay',
-        #     'Play History from Current Position',
-        #     '',
-        #     thomasa88lib.utils.get_fusion_deploy_folder() +
-        #     '/Fusion/UI/FusionUI/Resources/Timeline/RollPlay',
-        #     create_roll_history_handler('play'))
-        # dropdown_.controls.addCommand(c)
+        add_builtin_dropdown(dropdown_)
 
         dropdown_.controls.addSeparator()
-        
+
         global enable_cmd_def_
         enable_cmd_def_ = ui_.commandDefinitions.itemById(ENABLE_CMD_DEF_ID)
 

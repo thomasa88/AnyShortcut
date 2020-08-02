@@ -1,12 +1,12 @@
 # AnyShortcut
 
-AnyShortcut is a Fusion 360 add-in for easily assigning keyboard shortcuts to commands where it is not usually possible to assign a shortcut*. It also has some built-in commands for native commands that cannot run correctly without some extra tweaking.
+AnyShortcut is a Fusion 360 add-in for easily assigning keyboard shortcuts to commands where it is not usually possible to assign a shortcut*. It also has some built-in commands for Fusion 360 commands that cannot easily be capture and run without some extra tweaking (e.g. *Look At Sketch*).
 
 ## Tracking
 
 When enabled, the add-in tracks the resulting commands of actions that the user performs and collects them in the *AnyShortcut* menu. The commands in the menu can then be assigned shortcut keys in the regular way.
 
-If not stopped, the tracking stops automatically after a number of commands, to avoid any performance hits when the user is not setting up shortcuts.
+If not stopped, the tracking stops automatically after a number of commands, to avoid any performance degradation when the user is not setting up shortcuts.
 
 \* Not all actions in Fusion 360 result in "Commands" and some commands are not usable on their own. For example, *Pick Circle/Arc Tangent* does not generate a "Command" and *Roll History Marker Here* is triggered when clicking rewind in the history, but rewind actually first selects an item and then rolls. See 
 
@@ -34,7 +34,7 @@ Unpack it into `API\AddIns` (see [How to install an add-in or script in Fusion 3
 
 Make sure the directory is named `AnyShortcut`, with no suffix.
 
-Press Shift+S in Fusion 360 and go to the *Add-Ins* tab. Then select the add-in and click the *Run* button. Optionally select *Run on Startup*.
+Press Shift+S in Fusion 360 and go to the *Add-Ins* tab. Then select the add-in and click the *Run* button. Optionally select *Run on Startup* (This is needed if you want the *AnyShortcut* built-in commands to function after restarting Fusion 360).
 
 The new menu *TOOLS* -> *ADD-INS* -> *AnyShortcut* is now available.
 
