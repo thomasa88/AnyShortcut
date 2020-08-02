@@ -275,7 +275,7 @@ def add_builtin_dropdown(parent):
     builtin_dropdown_ = dropdown_.controls.itemById(BUILTIN_DROPDOWN_ID)       
     builtin_dropdown_ = dropdown_.controls.addDropDown('Built-in Commands',
                                             '', BUILTIN_DROPDOWN_ID)
-    #builtin_dropdown_.resourceFolder = './resources/anyshortcut'
+    builtin_dropdown_.resourceFolder = './resources/builtin'
 
     def create(cmd_def_id, text, tooltip, resource_folder, handler):
         cmd_def = ui_.commandDefinitions.itemById(cmd_def_id)
