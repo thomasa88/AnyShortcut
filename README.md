@@ -26,6 +26,13 @@ To remove a shortcut, follow the same procedure. Hint: You can press the shortcu
 
 The built-in commands are always visible in the *AnyShortcut* menu. Assign shortcuts to them in the usual way.
 
+Built-in commands include:
+
+ * Look At Sketch
+ * Look At Selected or Sketch
+ * Activate (containing) Component
+ * Move history marker backwards/forwards
+
 ## Installation
 
 Download the add-in from the [Releases](https://github.com/thomasa88/AnyShortcut/releases) page.
@@ -40,16 +47,16 @@ The new menu *TOOLS* -> *ADD-INS* -> *AnyShortcut* is now available.
 
 ## Ideas for commands to map
 
-Here is a table of some commands that can be interesting to map, including a suggested key.
+Here is a table of some commands that can be interesting to map.
 
-| Key  | Command                  | Notes                                                        |
-| ---- | ------------------------ | ------------------------------------------------------------ |
-| F2   | Rename, in the timeline  | Let's you select an item in the timeline and press F2 to rename it. I have not found any way to do this in the browser. |
-|      | Look at (bottom toolbar) | Select a face and orient the view normal to it. I have not found any way to tell it to "Look at" the current. |
-|      | Isolate                  |                                                              |
-|      | Find in Browser          |                                                              |
-|      | Find in Window           |                                                              |
-|      | Activate Component       | Works in the Browser and in the 3D space, but you must have selected a component in 3D space, not a body or a face. |
+| Command                  | Notes                                                        |
+| ------------------------ | ------------------------------------------------------------ |
+| Rename, in the timeline  | Let's you select an item in the timeline and press F2 to rename it. I have not found any way to do this in the browser. |
+| Look at (bottom toolbar) | Select a face and orient the view normal to it. I have not found any way to tell it to "Look at" the current. |
+| Isolate                  |                                                              |
+| Find in Browser          |                                                              |
+| Find in Window           |                                                              |
+| Activate Component       | Works in the Browser and in the 3D space, but you must have selected a component in 3D space, not a body or a face. |
 
 ## Finding out what keys you have mapped
 
