@@ -23,8 +23,10 @@ import adsk.core, adsk.fusion, adsk.cam, traceback
 
 from collections import deque
 import os
+import threading
+import time
 
-NAME = 'Any Shortcut'
+NAME = 'AnyShortcut'
 FILE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 # Import relative path to avoid namespace pollution
@@ -44,6 +46,7 @@ importlib.reload(thomasa88lib.settings)
 
 ENABLE_CMD_DEF_ID = 'thomasa88_anyShortcutList'
 MENU_DROPDOWN_ID = 'thomasa88_anyShortcutDropdown'
+DELAYED_EVENT_ID = 'thomasa88_anyShortcutEndOfQueueEvent'
 
 app_ = None
 ui_ = None
@@ -63,6 +66,12 @@ cmd_controls_ = deque()
 MAX_TRACK = 10
 track_count_ = 0
 tracking_ = False
+
+next_delay_id_ = 0
+delayed_funcs_ = {}
+
+termination_funcs_ = []
+termination_handler_info_ = None
 
 def command_starting_handler(args):
     event_args = adsk.core.ApplicationCommandEventArgs.cast(args)
@@ -143,6 +152,92 @@ def update_enable_text():
         enable_cmd_def_.resourceFolder = thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Base/Resources/Browser/CheckBoxUnchecked'
     enable_cmd_def_.controlDefinition.name = text
 
+def look_at_sketch_handler(args):
+    # Look at is usually not added to the history. Skip transaction (command).
+    edit_object = app_.activeEditObject
+    if edit_object.classType() == 'adsk::fusion::Sketch':
+        # laughingcreek provided the way that Fusion actually does this "Look At"
+        # https://forums.autodesk.com/t5/fusion-360-design-validate/shortcut-for-look-at/m-p/9517669/highlight/true#M217044
+        ui_.activeSelections.clear()
+        ui_.activeSelections.add(edit_object)
+        ui_.commandDefinitions.itemById('LookAtCommand').execute()
+
+        # We must give the Look At command time to run. This seems to imitate the
+        # way that Fusion does it.
+        # Using lambda to get fresh/valid instance of activeSelections at the end of
+        # the wait.
+        on_command_terminate('LookAtCommand',
+                             adsk.core.CommandTerminationReason.CancelledTerminationReason,
+                             lambda: ui_.activeSelections.clear())
+        #delay(lambda: ui_.activeSelections.clear(), secs=1)
+
+def look_at_sketch_or_selected_handler(args):
+    # Look at is usually not added to the history. Skip transaction (command).
+    if ui_.activeSelections.count == 0:
+        edit_object = app_.activeEditObject
+        if edit_object.classType() == 'adsk::fusion::Sketch':
+            look_at_sketch_handler(args)
+    else:
+        ui_.commandDefinitions.itemById('LookAtCommand').execute()
+
+def delayed_event_handler(args):
+    args = adsk.core.CustomEventArgs.cast(args)
+    delay_id = int(args.additionalInfo)
+    func = delayed_funcs_.pop(delay_id, lambda: None)
+    func()
+
+def delay(func, secs=0):
+    '''Puts a function at the end of the event queue,
+    and optionally delays it.
+    '''
+    global next_delay_id_
+    delay_id = next_delay_id_
+    next_delay_id_ += 1
+
+    def waiter():
+        time.sleep(secs)
+        app_.fireCustomEvent(DELAYED_EVENT_ID, str(delay_id))
+
+    delayed_funcs_[delay_id] = func
+
+    if secs > 0:
+        thread = threading.Thread(target=waiter)
+        thread.isDaemon = True
+        thread.start()
+    else:
+        app_.fireCustomEvent(DELAYED_EVENT_ID, str(delay_id))
+
+def on_command_terminate(command_id, termination_reason, func):
+    global termination_handler_info_
+    if not termination_handler_info_:
+        termination_handler_info_ = events_manager_.add_handler(ui_.commandTerminated,
+                                    adsk.core.ApplicationCommandEventHandler,
+                                    command_terminated_handler)
+    
+    termination_funcs_.append((command_id, termination_reason, func))   
+
+
+def command_terminated_handler(args):
+    global termination_handler_info_
+
+    args = adsk.core.ApplicationCommandEventArgs.cast(args)
+    
+    print("TERM", args.commandId, args.terminationReason, app_.activeEditObject.classType())
+    
+    remove_indices = []
+    for i, (command_id, termination_reason, func) in enumerate(termination_funcs_):
+        if (command_id == args.commandId and
+            (termination_reason is None or termination_reason == args.terminationReason)):
+            remove_indices.append(i)
+            func()
+    
+    for i in reversed(remove_indices):
+        del termination_funcs_[i]
+
+    if len(termination_funcs_) == 0:
+        events_manager_.remove_handler(termination_handler_info_)
+        termination_handler_info_ = None
+
 def run(context):
     global app_
     global ui_
@@ -151,6 +246,10 @@ def run(context):
         app_ = adsk.core.Application.get()
         ui_ = app_.userInterface
 
+        delayed_event = events_manager_.register_event(DELAYED_EVENT_ID)
+        events_manager_.add_handler(delayed_event,
+                                    adsk.core.CustomEventHandler,
+                                    delayed_event_handler)
 
         # Add the command to the toolbar.
         panel = ui_.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
@@ -162,6 +261,37 @@ def run(context):
         dropdown_ = panel.controls.addDropDown(f'{NAME} v{manifest_["version"]}',
                                                '', MENU_DROPDOWN_ID)
         dropdown_.resourceFolder = './resources/anyshortcut'
+        
+        c = ui_.commandDefinitions.itemById('thomasa88_anyShortcutListLookAtSketchCommand')
+        if c:
+            c.deleteMe()
+        c = ui_.commandDefinitions.addButtonDefinition(
+            'thomasa88_anyShortcutListLookAtSketchCommand',
+            f'Look At Sketch',
+            '',
+            thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Commands/Resources/Camera/LookAt')
+        events_manager_.add_handler(c.commandCreated,
+                                    adsk.core.CommandCreatedEventHandler,
+                                    look_at_sketch_handler)
+        dropdown_.controls.addCommand(c)
+
+        d = ui_.commandDefinitions.itemById('thomasa88_anyShortcutListLookAtSketchOrSelectedCommand')
+        if d:
+            d.deleteMe()
+        d = ui_.commandDefinitions.addButtonDefinition(
+            'thomasa88_anyShortcutListLookAtSketchOrSelectedCommand',
+            f'Look At Selected or Sketch',
+            '',
+            thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Commands/Resources/Camera/LookAt')
+        events_manager_.add_handler(d.commandCreated,
+                                    adsk.core.CommandCreatedEventHandler,
+                                    look_at_sketch_or_selected_handler)
+        dropdown_.controls.addCommand(d)
+
+        ### add: Look At Sketch or Selected
+        ### roll back/fwd, start, end. call the roll command to get correct undo history
+
+        dropdown_.controls.addSeparator()
         
         global enable_cmd_def_
         enable_cmd_def_ = ui_.commandDefinitions.itemById(ENABLE_CMD_DEF_ID)
