@@ -35,6 +35,7 @@ from .thomasa88lib import events
 from .thomasa88lib import manifest
 from .thomasa88lib import error
 from .thomasa88lib import settings
+from .thomasa88lib import timeline
 
 # Force modules to be fresh during development
 import importlib
@@ -43,6 +44,7 @@ importlib.reload(thomasa88lib.events)
 importlib.reload(thomasa88lib.manifest)
 importlib.reload(thomasa88lib.error)
 importlib.reload(thomasa88lib.settings)
+importlib.reload(thomasa88lib.timeline)
 
 ENABLE_CMD_DEF_ID = 'thomasa88_anyShortcutList'
 MENU_DROPDOWN_ID = 'thomasa88_anyShortcutDropdown'
@@ -189,6 +191,28 @@ def activate_containing_component_handler(args):
         ui_.commandDefinitions.itemById('FusionActivateLocalCompCmd').execute()
         ui_.commandDefinitions.itemById('FindInBrowser').execute()
 
+def create_roll_history_handler(move_function_name):
+    # Cannot use select + the native FusionRollCommand, due to this bug (2020-08-02):
+    # https://forums.autodesk.com/t5/fusion-360-api-and-scripts/cannot-select-object-in-component-using-activeselections/m-p/9653216
+
+    def execute_handler(args):
+        args = adsk.core.CommandEventArgs.cast(args)
+        timeline_status, timeline = thomasa88lib.timeline.get_timeline()
+        if timeline_status != thomasa88lib.timeline.TIMELINE_STATUS_OK:
+            args.executeFailed = True
+            args.executeFailedMessage = 'Failed to get the timeline'
+            return
+        move_function = getattr(timeline, move_function_name)
+        move_function()
+
+    def created_handler(args):
+        args = adsk.core.CommandCreatedEventArgs.cast(args)
+        events_manager_.add_handler(args.command.execute,
+                                    adsk.core.CommandEventHandler,
+                                    execute_handler)
+
+    return created_handler
+
 def delayed_event_handler(args):
     args = adsk.core.CustomEventArgs.cast(args)
     delay_id = int(args.additionalInfo)
@@ -309,8 +333,47 @@ def run(context):
                    '/Fusion/UI/FusionUI/Resources/Assembly/Activate',
                   activate_containing_component_handler)
         dropdown_.controls.addCommand(c)
+
+        c = create('thomasa88_anyShortcutListRollToBeginning',
+                  'Roll History Marker to Beginning',
+                  '',
+                  thomasa88lib.utils.get_fusion_deploy_folder() +
+                   '/Fusion/UI/FusionUI/Resources/Timeline/RollBegin',
+                  create_roll_history_handler('moveToBeginning'))
+        dropdown_.controls.addCommand(c)
+
+        c = create('thomasa88_anyShortcutListRollBack',
+                  'Roll History Marker Back',
+                  '',
+                  thomasa88lib.utils.get_fusion_deploy_folder() +
+                   '/Fusion/UI/FusionUI/Resources/Timeline/RollBack',
+                  create_roll_history_handler('moveToPreviousStep'))
+        dropdown_.controls.addCommand(c)
         
-        ### roll back/fwd, start, end. call the roll command to get correct undo history
+        c = create('thomasa88_anyShortcutListRollForward',
+                  'Roll History Marker Forward',
+                  '',
+                  thomasa88lib.utils.get_fusion_deploy_folder() +
+                  '/Fusion/UI/FusionUI/Resources/Timeline/RollFwd',
+                  create_roll_history_handler('movetoNextStep'))
+        dropdown_.controls.addCommand(c)
+
+        c = create('thomasa88_anyShortcutListRollToEnd',
+            'Roll History Marker to End',
+            '',
+            thomasa88lib.utils.get_fusion_deploy_folder() +
+            '/Fusion/UI/FusionUI/Resources/Timeline/RollEnd',
+            create_roll_history_handler('moveToEnd'))
+        dropdown_.controls.addCommand(c)
+
+        # timeline.play() just seems to skip to the end. Disabled.
+        # c = create('thomasa88_anyShortcutListHistoryPlay',
+        #     'Play History from Current Position',
+        #     '',
+        #     thomasa88lib.utils.get_fusion_deploy_folder() +
+        #     '/Fusion/UI/FusionUI/Resources/Timeline/RollPlay',
+        #     create_roll_history_handler('play'))
+        # dropdown_.controls.addCommand(c)
 
         dropdown_.controls.addSeparator()
         
