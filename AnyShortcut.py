@@ -443,17 +443,15 @@ def run(context):
         # Add the command to the toolbar.
         panel = ui_.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
 
+        add_builtin_dropdown(panel)
+
         tracking_dropdown_ = panel.controls.itemById(MENU_DROPDOWN_ID)
         if tracking_dropdown_:
             tracking_dropdown_.deleteMe()
         
         tracking_dropdown_ = panel.controls.addDropDown(f'{NAME} v{manifest_["version"]} Command Tracker',
                                                '', MENU_DROPDOWN_ID)
-        tracking_dropdown_.resourceFolder = './resources/anyshortcut'
-        
-        add_builtin_dropdown(panel)
-
-        tracking_dropdown_.controls.addSeparator()
+        tracking_dropdown_.resourceFolder = './resources/tracker'
 
         global enable_cmd_def_
         enable_cmd_def_ = ui_.commandDefinitions.itemById(ENABLE_CMD_DEF_ID)
