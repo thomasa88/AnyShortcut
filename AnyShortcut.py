@@ -211,6 +211,30 @@ def create_roll_history_handler(move_function_name):
 
     return created_handler
 
+def create_view_orientation_handler(view_orientation_name):
+    def created_handler(args):
+        # We don't want undo history, so no execute handler
+        args = adsk.core.CommandCreatedEventArgs.cast(args)
+
+        camera_copy = app_.activeViewport.camera
+        #camera_copy.isSmoothTransition = False # This seems to be ignored
+        camera_copy.viewOrientation = getattr(adsk.core.ViewOrientations,
+                                              view_orientation_name + 'ViewOrientation')
+        app_.activeViewport.camera = camera_copy
+
+        def rotate_up():
+            camera_copy = app_.activeViewport.camera
+            if view_orientation_name in ['Top', 'Bottom']:
+                up = adsk.core.Vector3D.create(0.0, 1.0, 0.0)
+            else:
+                up = adsk.core.Vector3D.create(0.0, 0.0, 1.0)
+            camera_copy.upVector = up
+            app_.activeViewport.camera = camera_copy
+        
+        delay(rotate_up, secs=1)
+
+    return created_handler
+
 def delayed_event_handler(args):
     args = adsk.core.CustomEventArgs.cast(args)
     delay_id = int(args.additionalInfo)
@@ -268,12 +292,13 @@ def command_terminated_handler(args):
         termination_handler_info_ = None
 
 def add_builtin_dropdown(parent):
-    builtin_dropdown_ = dropdown_.controls.itemById(BUILTIN_DROPDOWN_ID)       
     builtin_dropdown_ = dropdown_.controls.addDropDown('Built-in Commands',
                                             '', BUILTIN_DROPDOWN_ID)
     builtin_dropdown_.resourceFolder = './resources/builtin'
 
     def create(cmd_def_id, text, tooltip, resource_folder, handler):
+        # The cmd_def_id must never change during development of the add-in
+        # as users hotkeys will map to the command definition ID.
         cmd_def = ui_.commandDefinitions.itemById(cmd_def_id)
         if cmd_def:
             cmd_def.deleteMe()
@@ -362,6 +387,14 @@ def add_builtin_dropdown(parent):
     #     '/Fusion/UI/FusionUI/Resources/Timeline/RollPlay',
     #     create_roll_history_handler('play'))
     # builtin_dropdown_.controls.addCommand(c)
+
+    for view in ['Front', 'Back', 'Top', 'Bottom', 'Left', 'Right']:
+        c = create('thomasa88_anyShortcutBuiltinView' + view,
+            'View ' + view,
+            '',
+            '',
+            create_view_orientation_handler(view))
+        builtin_dropdown_.controls.addCommand(c)
 
 def run(context):
     global app_
