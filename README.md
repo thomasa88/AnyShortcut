@@ -2,6 +2,8 @@
 
 AnyShortcut is a Fusion 360 add-in for easily assigning keyboard shortcuts to commands where it is not usually possible to assign a shortcut*. It also has some built-in commands for Fusion 360 commands that cannot easily be capture and run without some extra tweaking (e.g. *Look At Sketch*).
 
+If you get any problems, please check out the section on [Fusion 360 quirks](#fusion-360-quirks).
+
 ## Tracking
 
 When enabled, the add-in tracks the resulting commands of actions that the user performs and collects them in the *AnyShortcut* menu. The commands in the menu can then be assigned shortcut keys in the regular way.
@@ -32,6 +34,16 @@ Built-in commands include:
  * Look At Selected or Sketch
  * Activate (containing) Component
  * Move history marker backwards/forwards
+
+## Fusion 360 Quirks
+
+Be aware of the following quirks in Fusion 360.
+
+* Even though you've added a shortcut, it might not show up next time you restart Fusion 360. However, the shortcut still works and you see it if you open *Change Keyboard Shortcut*. (You can also verify using [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimple/blob/master/README.md))
+
+* Fusion cannot handle all key combinations. Forget Alt+Left to rollback history, because Fusion 360 cannot save this combination and it will be broken next time you start Fusion 360.
+
+* Menu items in sub-menus are not always clickable ([bug](https://forums.autodesk.com/t5/fusion-360-api-and-scripts/api-bug-cannot-click-menu-items-in-nested-dropdown/td-p/9669144)). However, you don't need to be able to click the commands to map a shortcut!
 
 ## Installation
 
