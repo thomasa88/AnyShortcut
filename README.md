@@ -81,7 +81,7 @@ See [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimp
 ## Changelog
 
 * v 0.4.0
-  * Flatter menu structure
+  * Restructured menus
   * Repeat last command
 * v 0.3.0
   * View orientation commands

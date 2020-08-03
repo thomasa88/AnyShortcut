@@ -6,7 +6,7 @@
 	"description":	{
 		"":	"Shows a menu that let's you assign shortcuts to your last run commands."
 	},
-	"version":	"0.3.0",
+	"version":	"0.4.0",
 	"runOnStartup":	false,
 	"supportedOS":	"windows|mac",
 	"editEnabled":	true
