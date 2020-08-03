@@ -412,7 +412,7 @@ def add_builtin_dropdown(parent):
         c = create('thomasa88_anyShortcutBuiltinView' + view,
             'View ' + view,
             '',
-            '',
+            './resources/view' + view.lower(),
             create_view_orientation_handler(view))
         builtin_dropdown_.controls.addCommand(c)
 
