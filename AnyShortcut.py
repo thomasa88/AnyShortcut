@@ -22,6 +22,7 @@
 import adsk.core, adsk.fusion, adsk.cam, traceback
 
 from collections import deque
+import math
 import os
 import threading
 import time
@@ -217,21 +218,34 @@ def create_view_orientation_handler(view_orientation_name):
         args = adsk.core.CommandCreatedEventArgs.cast(args)
 
         camera_copy = app_.activeViewport.camera
-        #camera_copy.isSmoothTransition = False # This seems to be ignored
+        camera_copy.cameraType = adsk.core.CameraTypes.OrthographicCameraType #?
         camera_copy.viewOrientation = getattr(adsk.core.ViewOrientations,
                                               view_orientation_name + 'ViewOrientation')
         app_.activeViewport.camera = camera_copy
 
-        def rotate_up():
-            camera_copy = app_.activeViewport.camera
-            if view_orientation_name in ['Top', 'Bottom']:
-                up = adsk.core.Vector3D.create(0.0, 1.0, 0.0)
-            else:
-                up = adsk.core.Vector3D.create(0.0, 0.0, 1.0)
-            camera_copy.upVector = up
-            app_.activeViewport.camera = camera_copy
+        # Must set the up vector after the orient rotation has been performed,
+        # with a delay, for it to work correctly.
+
+        # def rotate_up():
+        #     camera_copy = app_.activeViewport.camera
+        #     # defaultModelingOrientation does not give us the orientation for
+        #     # the current document.
+        #     # ---> We don't know which direction is up!
+        #     # Create duplicate sets of commands?
+        #     modeling_orientation = app_.preferences.generalPreferences.defaultModelingOrientation
+
+        #     # Z-Up orientation:
+        #     if view_orientation_name in ['Top', 'Bottom']:
+        #         up = adsk.core.Vector3D.create(0.0, 1.0, 0.0)
+        #     else:
+        #         up = adsk.core.Vector3D.create(0.0, 0.0, 1.0)
+            
+        #     if camera_copy.upVector.angleTo(up) > (math.pi / 4.0):
+        #         camera_copy.upVector = up
+        #         app_.activeViewport.camera = camera_copy
+        #     #app_.activeViewport.refresh() Use this?
         
-        delay(rotate_up, secs=1)
+        #delay(rotate_up, secs=1)
 
     return created_handler
 
