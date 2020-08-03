@@ -34,6 +34,8 @@ Built-in commands include:
  * Look At Selected or Sketch
  * Activate (containing) Component
  * Move history marker backwards/forwards
+ * View orientation
+ * Repeat last command
 
 ## Fusion 360 Quirks
 
@@ -76,6 +78,10 @@ See [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimp
 
 ## Changelog
 
+* v 0.4.0
+  * Flatter menu structure
+  * Repeat last command
 * v 0.3.0
   * View orientation commands
   * Fusion quirks info
+

@@ -191,6 +191,9 @@ def activate_containing_component_handler(args):
         ui_.commandDefinitions.itemById('FusionActivateLocalCompCmd').execute()
         ui_.commandDefinitions.itemById('FindInBrowser').execute()
 
+def repeat_command_handler(args):
+    ui_.commandDefinitions.itemById('RepeatCommand').execute()
+
 def create_roll_history_handler(move_function_name):
     # Cannot use select + the native FusionRollCommand, due to this bug (2020-08-02):
     # https://forums.autodesk.com/t5/fusion-360-api-and-scripts/cannot-select-object-in-component-using-activeselections/m-p/9653216
@@ -365,6 +368,15 @@ def add_builtin_dropdown(parent):
                 thomasa88lib.utils.get_fusion_deploy_folder() +
                 '/Fusion/UI/FusionUI/Resources/Assembly/Activate',
                 activate_containing_component_handler)
+    builtin_dropdown_.controls.addCommand(c)
+
+    # For some reason, repeat captured using the tracking only works when clicking,
+    # not with a keyboard shortcut.
+    c = create('thomasa88_anyShortcutBuiltinRepeatCommand',
+                'Repeat Last Command',
+                '',
+                './resources/repeat',
+                repeat_command_handler)
     builtin_dropdown_.controls.addCommand(c)
 
     c = create('thomasa88_anyShortcutListRollToBeginning',
