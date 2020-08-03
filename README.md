@@ -4,26 +4,6 @@ AnyShortcut is a Fusion 360 add-in for easily assigning keyboard shortcuts to co
 
 If you get any problems, please check out the section on [Fusion 360 quirks](#fusion-360-quirks).
 
-## Tracking
-
-When enabled, the add-in tracks the resulting commands of actions that the user performs and collects them in the *AnyShortcut* menu. The commands in the menu can then be assigned shortcut keys in the regular way.
-
-If not stopped, the tracking stops automatically after a number of commands, to avoid any performance degradation when the user is not setting up shortcuts.
-
-\* Not all actions in Fusion 360 result in "Commands" and some commands are not usable on their own. For example, *Pick Circle/Arc Tangent* does not generate a "Command" and *Roll History Marker Here* is triggered when clicking rewind in the history, but rewind actually first selects an item and then rolls. See 
-
-![Screenshot](screenshot.png)
-
-### Usage
-
-To set up a shortcut:
-
-* Click *Enable tracking* and then perform the command you want to create a shortcut for
-* If you are lucky, the command will now have appeared at the bottom of the *AnyShortcut* menu.
-* Find the command in the menu and click the three dots to assign a shortcut as usual.
-
-To remove a shortcut, follow the same procedure. Hint: You can press the shortcut to trigger the command to be run.
-
 ## Built-in Commands
 
 The built-in commands are always visible in the *AnyShortcut* menu. Assign shortcuts to them in the usual way.
@@ -36,6 +16,28 @@ Built-in commands include:
  * Move history marker backwards/forwards
  * View orientation
  * Repeat last command
+
+![Screenshot](builtin_screenshot.png)
+
+## Tracking
+
+When enabled, the add-in tracks the resulting commands of actions that the user performs and collects them in the *AnyShortcut* menu. The commands in the menu can then be assigned shortcut keys in the regular way.
+
+If not stopped, the tracking stops automatically after a number of commands, to avoid any performance degradation when the user is not setting up shortcuts.
+
+\* Not all actions in Fusion 360 result in "Commands" and some commands are not usable on their own. For example, *Pick Circle/Arc Tangent* does not generate a "Command" and *Roll History Marker Here* is triggered when clicking rewind in the history, but rewind actually first selects an item and then rolls.
+
+![Screenshot](tracker_screenshot.png)
+
+### Usage
+
+To set up a shortcut:
+
+* Click *Enable tracking* and then perform the command you want to create a shortcut for
+* If you are lucky, the command will now have appeared at the bottom of the *AnyShortcut* menu.
+* Find the command in the menu and click the three dots to assign a shortcut as usual.
+
+To remove a shortcut, follow the same procedure. Hint: You can press the shortcut to trigger the command to be run.
 
 ## Fusion 360 Quirks
 
