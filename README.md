@@ -73,3 +73,9 @@ Here is a table of some commands that can be interesting to map.
 ## Finding out what keys you have mapped
 
 See [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimple/blob/master/README.md).
+
+## Changelog
+
+* v 0.3.0
+  * View orientation commands
+  * Fusion quirks info
