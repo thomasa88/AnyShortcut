@@ -299,11 +299,17 @@ def add_builtin_dropdown(parent):
     def create(cmd_def_id, text, tooltip, resource_folder, handler):
         # The cmd_def_id must never change during development of the add-in
         # as users hotkeys will map to the command definition ID.
+
         cmd_def = ui_.commandDefinitions.itemById(cmd_def_id)
         if cmd_def:
             cmd_def.deleteMe()
         cmd_def = ui_.commandDefinitions.addButtonDefinition(
             cmd_def_id, text, tooltip, resource_folder)
+
+        if not resource_folder:
+            # Must have icon for the assign shortcut menu to appear
+            cmd_def.resourceFolder = './resources/noicon'
+        
         events_manager_.add_handler(cmd_def.commandCreated,
                                     callback=handler)
         return cmd_def
