@@ -283,6 +283,17 @@ def add_builtin_dropdown(parent):
                                     callback=handler)
         return cmd_def
 
+    # Nested drop-down bug (2020-08-03):
+    # https://forums.autodesk.com/t5/fusion-360-api-and-scripts/api-bug-cannot-click-menu-items-in-nested-dropdown/td-p/9669144
+    c = create('thomasa88_anyShortcutBugInfo',
+                'Fusion Bug: Menu items sometimes not clickable. But shortcuts work!',
+                '',
+                '',
+                lambda args: None)
+    c.controlDefinition.isEnabled = False
+    control = builtin_dropdown_.controls.addCommand(c)
+    builtin_dropdown_.controls.addSeparator()
+
     c = create('thomasa88_anyShortcutListLookAtSketchCommand',
                 'Look At Sketch',
                 'Rotates the view to look at the sketch currently being edited. ' + 
@@ -397,6 +408,7 @@ def run(context):
                                     callback=enable_cmd_def__created_handler)
         
         dropdown_.controls.addCommand(enable_cmd_def_)
+        enable_cmd_def_.controlDefinition.isEnabled = False
         dropdown_.controls.addSeparator()
 
 def stop(context):
