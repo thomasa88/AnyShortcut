@@ -118,8 +118,7 @@ def command_starting_handler(args):
 def enable_cmd_def__created_handler(args):
     command = args.command
     events_manager_.add_handler(command.execute,
-                               adsk.core.CommandEventHandler,
-                               enable_command_execute_handler)
+                                callback=enable_command_execute_handler)
 
 def enable_command_execute_handler(args):
     global tracking_
@@ -136,8 +135,7 @@ def start_tracking():
     tracking_ = True
     track_count_ = 0
     command_starting_handler_info_ = events_manager_.add_handler(ui_.commandStarting,
-                                adsk.core.ApplicationCommandEventHandler,
-                                command_starting_handler)
+                                                                 callback=command_starting_handler)
     update_enable_text()
 
 def stop_tracking():
@@ -209,8 +207,7 @@ def create_roll_history_handler(move_function_name):
     def created_handler(args):
         args = adsk.core.CommandCreatedEventArgs.cast(args)
         events_manager_.add_handler(args.command.execute,
-                                    adsk.core.CommandEventHandler,
-                                    execute_handler)
+                                    callback=execute_handler)
 
     return created_handler
 
@@ -245,8 +242,7 @@ def on_command_terminate(command_id, termination_reason, func):
     global termination_handler_info_
     if not termination_handler_info_:
         termination_handler_info_ = events_manager_.add_handler(ui_.commandTerminated,
-                                    adsk.core.ApplicationCommandEventHandler,
-                                    command_terminated_handler)
+                                                                callback=command_terminated_handler)
     
     termination_funcs_.append((command_id, termination_reason, func))   
 
@@ -284,8 +280,7 @@ def add_builtin_dropdown(parent):
         cmd_def = ui_.commandDefinitions.addButtonDefinition(
             cmd_def_id, text, tooltip, resource_folder)
         events_manager_.add_handler(cmd_def.commandCreated,
-                                    adsk.core.CommandCreatedEventHandler,
-                                    handler)
+                                    callback=handler)
         return cmd_def
 
     c = create('thomasa88_anyShortcutListLookAtSketchCommand',
@@ -367,8 +362,7 @@ def run(context):
 
         delayed_event = events_manager_.register_event(DELAYED_EVENT_ID)
         events_manager_.add_handler(delayed_event,
-                                    adsk.core.CustomEventHandler,
-                                    delayed_event_handler)
+                                    callback=delayed_event_handler)
 
         # Add the command to the toolbar.
         panel = ui_.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
@@ -399,9 +393,8 @@ def run(context):
             f'Loading...',
             '')
         update_enable_text()
-        events_manager_.add_handler(enable_cmd_def_.commandCreated,
-                        adsk.core.CommandCreatedEventHandler,
-                        enable_cmd_def__created_handler)
+        events_manager_.add_handler(event=enable_cmd_def_.commandCreated,
+                                    callback=enable_cmd_def__created_handler)
         
         dropdown_.controls.addCommand(enable_cmd_def_)
         dropdown_.controls.addSeparator()
