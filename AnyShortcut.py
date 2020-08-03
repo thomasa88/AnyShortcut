@@ -60,7 +60,8 @@ manifest_ = thomasa88lib.manifest.read()
 settings_ = thomasa88lib.settings.SettingsManager({})
 command_starting_handler_info_ = None
 
-dropdown_ = None
+tracking_dropdown_ = None
+builtin_dropdown_ = None
 enable_cmd_def_ = None
 HISTORY_LENGTH = 10
 cmd_def_history_ = deque()
@@ -102,7 +103,7 @@ def command_starting_handler(args):
         except:
             cmd_def.resourceFolder = './resources/noicon'
 
-        cmd_control = dropdown_.controls.addCommand(cmd_def)
+        cmd_control = tracking_dropdown_.controls.addCommand(cmd_def)
         if cmd_control:
             cmd_def_history_.append(cmd_def)
             cmd_controls_.append(cmd_control)
@@ -309,7 +310,11 @@ def command_terminated_handler(args):
         termination_handler_info_ = None
 
 def add_builtin_dropdown(parent):
-    builtin_dropdown_ = dropdown_.controls.addDropDown('Built-in Commands',
+    global builtin_dropdown_
+    builtin_dropdown_ = parent.controls.itemById(BUILTIN_DROPDOWN_ID)
+    if builtin_dropdown_:
+            builtin_dropdown_.deleteMe()
+    builtin_dropdown_ = parent.controls.addDropDown(f'{NAME} v{manifest_["version"]} Built-in Commands',
                                             '', BUILTIN_DROPDOWN_ID)
     builtin_dropdown_.resourceFolder = './resources/builtin'
 
@@ -330,17 +335,6 @@ def add_builtin_dropdown(parent):
         events_manager_.add_handler(cmd_def.commandCreated,
                                     callback=handler)
         return cmd_def
-
-    # Nested drop-down bug (2020-08-03):
-    # https://forums.autodesk.com/t5/fusion-360-api-and-scripts/api-bug-cannot-click-menu-items-in-nested-dropdown/td-p/9669144
-    c = create('thomasa88_anyShortcutBugInfo',
-                'Fusion Bug: Menu items sometimes not clickable. But shortcuts work!',
-                '',
-                '',
-                lambda args: None)
-    c.controlDefinition.isEnabled = False
-    control = builtin_dropdown_.controls.addCommand(c)
-    builtin_dropdown_.controls.addSeparator()
 
     c = create('thomasa88_anyShortcutListLookAtSketchCommand',
                 'Look At Sketch',
@@ -379,13 +373,16 @@ def add_builtin_dropdown(parent):
                 repeat_command_handler)
     builtin_dropdown_.controls.addCommand(c)
 
+    timeline_dropdown = builtin_dropdown_.controls.addDropDown('Timeline', './resources/timeline',
+                                                               'thomasa88_anyShortcutBuiltinTimelineList')
+
     c = create('thomasa88_anyShortcutListRollToBeginning',
                 'Roll History Marker to Beginning',
                 '',
                 thomasa88lib.utils.get_fusion_deploy_folder() +
                 '/Fusion/UI/FusionUI/Resources/Timeline/RollBegin',
                 create_roll_history_handler('moveToBeginning'))
-    builtin_dropdown_.controls.addCommand(c)
+    timeline_dropdown.controls.addCommand(c)
 
     c = create('thomasa88_anyShortcutListRollBack',
                 'Roll History Marker Back',
@@ -393,7 +390,7 @@ def add_builtin_dropdown(parent):
                 thomasa88lib.utils.get_fusion_deploy_folder() +
                 '/Fusion/UI/FusionUI/Resources/Timeline/RollBack',
                 create_roll_history_handler('moveToPreviousStep'))
-    builtin_dropdown_.controls.addCommand(c)
+    timeline_dropdown.controls.addCommand(c)
     
     c = create('thomasa88_anyShortcutListRollForward',
                 'Roll History Marker Forward',
@@ -401,7 +398,7 @@ def add_builtin_dropdown(parent):
                 thomasa88lib.utils.get_fusion_deploy_folder() +
                 '/Fusion/UI/FusionUI/Resources/Timeline/RollFwd',
                 create_roll_history_handler('movetoNextStep'))
-    builtin_dropdown_.controls.addCommand(c)
+    timeline_dropdown.controls.addCommand(c)
 
     c = create('thomasa88_anyShortcutListRollToEnd',
         'Roll History Marker to End',
@@ -409,7 +406,7 @@ def add_builtin_dropdown(parent):
         thomasa88lib.utils.get_fusion_deploy_folder() +
         '/Fusion/UI/FusionUI/Resources/Timeline/RollEnd',
         create_roll_history_handler('moveToEnd'))
-    builtin_dropdown_.controls.addCommand(c)
+    timeline_dropdown.controls.addCommand(c)
 
     # timeline.play() just seems to skip to the end. Disabled.
     # c = create('thomasa88_anyShortcutListHistoryPlay',
@@ -418,20 +415,23 @@ def add_builtin_dropdown(parent):
     #     thomasa88lib.utils.get_fusion_deploy_folder() +
     #     '/Fusion/UI/FusionUI/Resources/Timeline/RollPlay',
     #     create_roll_history_handler('play'))
-    # builtin_dropdown_.controls.addCommand(c)
+    # timeline_dropdown.controls.addCommand(c)
 
+    view_dropdown = builtin_dropdown_.controls.addDropDown('View Orientation', './resources/viewfront',
+                                                           'thomasa88_anyShortcutBuiltinViewList')
     for view in ['Front', 'Back', 'Top', 'Bottom', 'Left', 'Right']:
         c = create('thomasa88_anyShortcutBuiltinView' + view,
             'View ' + view,
             '',
             './resources/view' + view.lower(),
             create_view_orientation_handler(view))
-        builtin_dropdown_.controls.addCommand(c)
+        view_dropdown.controls.addCommand(c)
 
 def run(context):
     global app_
     global ui_
-    global dropdown_
+    global tracking_dropdown_
+    global builtin_dropdown_
     with error_catcher_:
         app_ = adsk.core.Application.get()
         ui_ = app_.userInterface
@@ -443,17 +443,17 @@ def run(context):
         # Add the command to the toolbar.
         panel = ui_.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
 
-        dropdown_ = panel.controls.itemById(MENU_DROPDOWN_ID)
-        if dropdown_:
-            dropdown_.deleteMe()
+        tracking_dropdown_ = panel.controls.itemById(MENU_DROPDOWN_ID)
+        if tracking_dropdown_:
+            tracking_dropdown_.deleteMe()
         
-        dropdown_ = panel.controls.addDropDown(f'{NAME} v{manifest_["version"]}',
+        tracking_dropdown_ = panel.controls.addDropDown(f'{NAME} v{manifest_["version"]} Command Tracker',
                                                '', MENU_DROPDOWN_ID)
-        dropdown_.resourceFolder = './resources/anyshortcut'
+        tracking_dropdown_.resourceFolder = './resources/anyshortcut'
         
-        add_builtin_dropdown(dropdown_)
+        add_builtin_dropdown(panel)
 
-        dropdown_.controls.addSeparator()
+        tracking_dropdown_.controls.addSeparator()
 
         global enable_cmd_def_
         enable_cmd_def_ = ui_.commandDefinitions.itemById(ENABLE_CMD_DEF_ID)
@@ -472,18 +472,16 @@ def run(context):
         events_manager_.add_handler(event=enable_cmd_def_.commandCreated,
                                     callback=enable_cmd_def__created_handler)
         
-        dropdown_.controls.addCommand(enable_cmd_def_)
+        tracking_dropdown_.controls.addCommand(enable_cmd_def_)
         enable_cmd_def_.controlDefinition.isEnabled = False
-        dropdown_.controls.addSeparator()
+        tracking_dropdown_.controls.addSeparator()
 
 def stop(context):
     with error_catcher_:
         events_manager_.clean_up()
 
-        panel = ui_.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
-        dropdown_ = panel.controls.itemById(MENU_DROPDOWN_ID)
-        if dropdown_:
-            dropdown_.deleteMe()
+        tracking_dropdown_.deleteMe()
+        builtin_dropdown_.deleteMe()
 
         # Need to delete children?
 
