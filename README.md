@@ -73,6 +73,7 @@ Here is a table of some commands that can be interesting to map.
 | Find in Browser          |                                                              |
 | Find in Window           |                                                              |
 | Activate Component       | Works in the Browser and in the 3D space, but you must have selected a component in 3D space, not a body or a face. |
+| Remove                   | Opposed to *Delete,* *Remove* appears as a timeline feature. |
 
 ## Finding out what keys you have mapped
 
