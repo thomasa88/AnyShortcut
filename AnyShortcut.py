@@ -40,7 +40,6 @@ from .thomasa88lib import utils
 from .thomasa88lib import events
 from .thomasa88lib import manifest
 from .thomasa88lib import error
-from .thomasa88lib import settings
 from .thomasa88lib import timeline
 
 # Force modules to be fresh during development
@@ -49,7 +48,6 @@ importlib.reload(thomasa88lib.utils)
 importlib.reload(thomasa88lib.events)
 importlib.reload(thomasa88lib.manifest)
 importlib.reload(thomasa88lib.error)
-importlib.reload(thomasa88lib.settings)
 importlib.reload(thomasa88lib.timeline)
 
 ENABLE_CMD_DEF_ID = 'thomasa88_anyShortcutList'
@@ -62,7 +60,6 @@ ui_ = None
 error_catcher_ = thomasa88lib.error.ErrorCatcher()
 events_manager_ = thomasa88lib.events.EventsManager(error_catcher_)
 manifest_ = thomasa88lib.manifest.read()
-settings_ = thomasa88lib.settings.SettingsManager({})
 command_starting_handler_info_ = None
 
 tracking_dropdown_ = None
