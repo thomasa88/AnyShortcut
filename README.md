@@ -81,6 +81,9 @@ See [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimp
 
 ## Changelog
 
+* v 0.4.1
+  * Fix Repeat command
+  * Avoid getting commands picked in Repeat command
 * v 0.4.0
   * Restructured menus
   * Repeat last command

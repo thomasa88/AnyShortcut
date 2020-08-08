@@ -155,8 +155,10 @@ def update_enable_text():
         enable_cmd_def_.resourceFolder = thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Base/Resources/Browser/CheckBoxUnchecked'
     enable_cmd_def_.controlDefinition.name = text
 
-def look_at_sketch_handler(args):
-    # Look at is usually not added to the history. Skip transaction (command).
+def look_at_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
+    # Look at is usually not added to the history - skip execution.
+    # Avoid getting listed as a repeatable command.
+    args.command.isRepeatable = False
     edit_object = app_.activeEditObject
     if edit_object.classType() == 'adsk::fusion::Sketch':
         # laughingcreek provided the way that Fusion actually does this "Look At"
@@ -174,8 +176,10 @@ def look_at_sketch_handler(args):
                              lambda: ui_.activeSelections.clear())
         #delay(lambda: ui_.activeSelections.clear(), secs=1)
 
-def look_at_sketch_or_selected_handler(args):
-    # Look at is usually not added to the history. Skip transaction (command).
+def look_at_sketch_or_selected_handler(args: adsk.core.CommandCreatedEventArgs):
+    # Look at is usually not added to the history - skip execution handler.
+    # Avoid getting listed as a repeatable command.
+    args.command.isRepeatable = False
     if ui_.activeSelections.count == 0:
         edit_object = app_.activeEditObject
         if edit_object.classType() == 'adsk::fusion::Sketch':
@@ -183,7 +187,8 @@ def look_at_sketch_or_selected_handler(args):
     else:
         ui_.commandDefinitions.itemById('LookAtCommand').execute()
 
-def activate_containing_component_handler(args):
+def activate_containing_component_handler(args: adsk.core.CommandCreatedEventArgs):
+    args.command.isRepeatable = False
     if ui_.activeSelections.count == 1:
         selected = ui_.activeSelections[0].entity
         if selected.classType() not in ['adsk::fusion::Component', 'adsk::fusion::Occurrence']:
@@ -192,15 +197,17 @@ def activate_containing_component_handler(args):
         ui_.commandDefinitions.itemById('FusionActivateLocalCompCmd').execute()
         ui_.commandDefinitions.itemById('FindInBrowser').execute()
 
-def repeat_command_handler(args):
+def repeat_command_handler(args: adsk.core.CommandCreatedEventArgs):
+    # Avoid getting picked up and repeated into eternity
+    args.command.isRepeatable = False
+    args.command.isExecutedWhenPreEmpted = False
     ui_.commandDefinitions.itemById('RepeatCommand').execute()
 
 def create_roll_history_handler(move_function_name):
     # Cannot use select + the native FusionRollCommand, due to this bug (2020-08-02):
     # https://forums.autodesk.com/t5/fusion-360-api-and-scripts/cannot-select-object-in-component-using-activeselections/m-p/9653216
 
-    def execute_handler(args):
-        args = adsk.core.CommandEventArgs.cast(args)
+    def execute_handler(args: adsk.core.CommandEventArgs):
         timeline_status, timeline = thomasa88lib.timeline.get_timeline()
         if timeline_status != thomasa88lib.timeline.TIMELINE_STATUS_OK:
             args.executeFailed = True
@@ -209,17 +216,19 @@ def create_roll_history_handler(move_function_name):
         move_function = getattr(timeline, move_function_name)
         move_function()
 
-    def created_handler(args):
-        args = adsk.core.CommandCreatedEventArgs.cast(args)
+    def created_handler(args: adsk.core.CommandCreatedEventArgs):
+        args.command.isRepeatable = False
         events_manager_.add_handler(args.command.execute,
                                     callback=execute_handler)
 
     return created_handler
 
 def create_view_orientation_handler(view_orientation_name):
-    def created_handler(args):
+    def created_handler(args: adsk.core.CommandCreatedEventArgs):
         # We don't want undo history, so no execute handler
-        args = adsk.core.CommandCreatedEventArgs.cast(args)
+        
+        # Avoid getting listed as a repeatable command.
+        args.command.isRepeatable = False
 
         camera_copy = app_.activeViewport.camera
         camera_copy.cameraType = adsk.core.CameraTypes.OrthographicCameraType #?
@@ -253,8 +262,7 @@ def create_view_orientation_handler(view_orientation_name):
 
     return created_handler
 
-def delayed_event_handler(args):
-    args = adsk.core.CustomEventArgs.cast(args)
+def delayed_event_handler(args: adsk.core.CustomEventArgs):
     delay_id = int(args.additionalInfo)
     func = delayed_funcs_.pop(delay_id, lambda: None)
     func()
