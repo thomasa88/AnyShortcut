@@ -81,6 +81,9 @@ See [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimp
 
 ## Changelog
 
+* v 0.4.2
+  * Change license to MIT
+  * Avoid creating a settings file (not used)
 * v 0.4.1
   * Fix Repeat command
   * Avoid getting commands picked in Repeat command
