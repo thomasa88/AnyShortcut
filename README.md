@@ -1,4 +1,4 @@
-# AnyShortcut
+# ![](resources/anyshortcut/32x32.png) AnyShortcut
 
 AnyShortcut is a Fusion 360 add-in for easily assigning keyboard shortcuts to commands where it is not usually possible to assign a shortcut*. It also has some built-in commands for Fusion 360 commands that cannot easily be capture and run without some extra tweaking (e.g. *Look At Sketch*).
 
