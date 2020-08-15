@@ -51,7 +51,10 @@ importlib.reload(thomasa88lib.error)
 importlib.reload(thomasa88lib.timeline)
 
 ENABLE_CMD_DEF_ID = 'thomasa88_anyShortcutList'
-MENU_DROPDOWN_ID = 'thomasa88_anyShortcutDropdown'
+ABOUT_CMD_DEF_ID = 'thomasa88_anyShortcutAbout'
+PANEL_ID = 'thomasa88_anyShortcutPanel'
+MAIN_DROPDOWN_ID = 'thomasa88_anyShortcutMainDropdown'
+TRACKING_DROPDOWN_ID = 'thomasa88_anyShortcutDropdown'
 BUILTIN_DROPDOWN_ID = 'thomasa88_anyShortcutPremadeDropdown'
 DELAYED_EVENT_ID = 'thomasa88_anyShortcutEndOfQueueEvent'
 
@@ -62,6 +65,7 @@ events_manager_ = thomasa88lib.events.EventsManager(error_catcher_)
 manifest_ = thomasa88lib.manifest.read()
 command_starting_handler_info_ = None
 
+panel_ = None
 tracking_dropdown_ = None
 builtin_dropdown_ = None
 enable_cmd_def_ = None
@@ -150,10 +154,10 @@ def stop_tracking():
 
 def update_enable_text():
     if tracking_:
-        text = f'Enable tracking ({MAX_TRACK - track_count_} more unique commands)'
+        text = f'Enable recording ({MAX_TRACK - track_count_} more unique commands)'
         enable_cmd_def_.resourceFolder = thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Base/Resources/Browser/CheckBoxChecked'
     else:
-        text = f'Enable tracking ({MAX_TRACK} unique commands)'
+        text = f'Enable recording ({MAX_TRACK} unique commands)'
         enable_cmd_def_.resourceFolder = thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Base/Resources/Browser/CheckBoxUnchecked'
     enable_cmd_def_.controlDefinition.name = text
 
@@ -324,9 +328,9 @@ def add_builtin_dropdown(parent):
     builtin_dropdown_ = parent.controls.itemById(BUILTIN_DROPDOWN_ID)
     if builtin_dropdown_:
             builtin_dropdown_.deleteMe()
-    builtin_dropdown_ = parent.controls.addDropDown(f'{NAME} v{manifest_["version"]} Built-in Commands',
-                                            '', BUILTIN_DROPDOWN_ID)
-    builtin_dropdown_.resourceFolder = './resources/builtin'
+    builtin_dropdown_ = parent.controls.addDropDown(f'Built-in Commands',
+                                                    './resources/builtin',
+                                                    BUILTIN_DROPDOWN_ID)
 
     def create(cmd_def_id, text, tooltip, resource_folder, handler):
         # The cmd_def_id must never change during development of the add-in
@@ -442,6 +446,7 @@ def run(context):
     global ui_
     global tracking_dropdown_
     global builtin_dropdown_
+    global panel_
     with error_catcher_:
         app_ = adsk.core.Application.get()
         ui_ = app_.userInterface
@@ -450,18 +455,22 @@ def run(context):
         events_manager_.add_handler(delayed_event,
                                     callback=delayed_event_handler)
 
-        # Add the command to the toolbar.
-        panel = ui_.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
+        # Add the command to the tab.
+        tab = ui_.allToolbarTabs.itemById('ToolsTab')
 
-        add_builtin_dropdown(panel)
+        panel_ = tab.toolbarPanels.itemById(PANEL_ID)
+        if panel_:
+            panel_.deleteMe()
+        panel_ = tab.toolbarPanels.add(PANEL_ID, f'{NAME}')
+        add_builtin_dropdown(panel_)
 
-        tracking_dropdown_ = panel.controls.itemById(MENU_DROPDOWN_ID)
+        tracking_dropdown_ = panel_.controls.itemById(TRACKING_DROPDOWN_ID)
         if tracking_dropdown_:
             tracking_dropdown_.deleteMe()
         
-        tracking_dropdown_ = panel.controls.addDropDown(f'{NAME} v{manifest_["version"]} Command Tracker',
-                                               '', MENU_DROPDOWN_ID)
-        tracking_dropdown_.resourceFolder = './resources/tracker'
+        tracking_dropdown_ = panel_.controls.addDropDown(f'Command Recorder',
+                                                         './resources/tracker',
+                                                         TRACKING_DROPDOWN_ID)
 
         global enable_cmd_def_
         enable_cmd_def_ = ui_.commandDefinitions.itemById(ENABLE_CMD_DEF_ID)
@@ -484,12 +493,27 @@ def run(context):
         enable_cmd_def_.controlDefinition.isEnabled = False
         tracking_dropdown_.controls.addSeparator()
 
+        about_cmd_def = ui_.commandDefinitions.itemById(ABOUT_CMD_DEF_ID)
+        if about_cmd_def:
+            about_cmd_def.deleteMe()
+        about_cmd_def = ui_.commandDefinitions.addButtonDefinition(
+            ABOUT_CMD_DEF_ID,
+            f'{NAME} (v{manifest_["version"]})',
+            'Open the menu to add keyboard shortcuts to commands.',
+            './resources/anyshortcut')
+        about_control = panel_.controls.addCommand(about_cmd_def)
+        about_control.isPromoted = True
+        about_control.isPromotedByDefault = True
+        about_control.isVisible = False
+        about_cmd_def.controlDefinition.isEnabled = False
+
 def stop(context):
     with error_catcher_:
         events_manager_.clean_up()
 
         tracking_dropdown_.deleteMe()
         builtin_dropdown_.deleteMe()
+        panel_.deleteMe()
 
         # Need to delete children?
 

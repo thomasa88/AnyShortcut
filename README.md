@@ -19,11 +19,11 @@ Built-in commands include:
 
 ![Screenshot](builtin_screenshot.png)
 
-## Tracking
+## Recording
 
-When enabled, the add-in tracks the resulting commands of actions that the user performs and collects them in the *AnyShortcut* menu. The commands in the menu can then be assigned shortcut keys in the regular way.
+When enabled, the add-in records the resulting commands of actions that the user performs and collects them in the *AnyShortcut* menu. The commands in the menu can then be assigned shortcut keys in the regular way.
 
-If not stopped, the tracking stops automatically after a number of commands, to avoid any performance degradation when the user is not setting up shortcuts.
+If not stopped, the recording stops automatically after a number of commands, to avoid any performance degradation when the user is not setting up shortcuts.
 
 \* Not all actions in Fusion 360 result in "Commands" and some commands are not usable on their own. For example, *Pick Circle/Arc Tangent* does not generate a "Command" and *Roll History Marker Here* is triggered when clicking rewind in the history, but rewind actually first selects an item and then rolls.
 
@@ -33,7 +33,7 @@ If not stopped, the tracking stops automatically after a number of commands, to 
 
 To set up a shortcut:
 
-* Click *Enable tracking* and then perform the command you want to create a shortcut for
+* Click *Enable recording* and then perform the command you want to create a shortcut for
 * If you are lucky, the command will now have appeared at the bottom of the *AnyShortcut* menu.
 * Find the command in the menu and click the three dots to assign a shortcut as usual.
 
@@ -59,21 +59,22 @@ Make sure the directory is named `AnyShortcut`, with no suffix.
 
 Press Shift+S in Fusion 360 and go to the *Add-Ins* tab. Then select the add-in and click the *Run* button. Optionally select *Run on Startup* (This is needed if you want the *AnyShortcut* built-in commands to function after restarting Fusion 360).
 
-The new menu *TOOLS* -> *ADD-INS* -> *AnyShortcut* is now available.
+The new menu *TOOLS* -> *ANYSHORTCUT* is now available.
 
 ## Ideas for commands to map
 
 Here is a table of some commands that can be interesting to map.
 
-| Command                  | Notes                                                        |
-| ------------------------ | ------------------------------------------------------------ |
-| Rename, in the timeline  | Let's you select an item in the timeline and press F2 to rename it. I have not found any way to do this in the browser. |
-| Look at (bottom toolbar) | Select a face and orient the view normal to it. I have not found any way to tell it to "Look at" the current. |
-| Isolate                  |                                                              |
-| Find in Browser          |                                                              |
-| Find in Window           |                                                              |
-| Activate Component       | Works in the Browser and in the 3D space, but you must have selected a component in 3D space, not a body or a face. |
-| Remove                   | Opposed to *Delete,* *Remove* appears as a timeline feature. |
+| Command                     | Notes                                                        |
+| --------------------------- | ------------------------------------------------------------ |
+| Rename, in the timeline     | Let's you select an item in the timeline and press F2 to rename it. I have not found any way to do this in the browser. |
+| Look at (bottom toolbar)    | Select a face and orient the view normal to it. I have not found any way to tell it to "Look at" the current. |
+| Isolate                     |                                                              |
+| Find in Browser             |                                                              |
+| Find in Window              |                                                              |
+| Activate Component          | Works in the Browser and in the 3D space, but you must have selected a component in 3D space, not a body or a face. |
+| Remove                      | Opposed to *Delete,* *Remove* appears as a timeline feature. |
+| Simulate or other workspace | Easily switch to a workspace.                                |
 
 ## Finding out what keys you have mapped
 
@@ -81,6 +82,11 @@ See [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimp
 
 ## Changelog
 
+* v 1.0.0
+  * Fix Autodesk app store review items
+    * Promote menu to top-level
+    * Icons that show intent
+  * Rename *Tracker* to *Recorder*
 * v 0.4.2
   * Change license to MIT
   * Avoid creating a settings file (not used)
