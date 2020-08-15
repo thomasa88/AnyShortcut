@@ -506,10 +506,16 @@ def run(context):
             f'{NAME} (v{manifest_["version"]})',
             'Open the menu to add keyboard shortcuts to commands.',
             './resources/anyshortcut')
+        events_manager_.add_handler(about_cmd_def.commandCreated,
+                                    callback=lambda args: ui_.messageBox(
+                                    'This icon should not be clickable, but it is, due to a Fusion bug.\n\n' +
+                                    'Click on the drop down menu to access the controls'))
         about_control = panel_.controls.addCommand(about_cmd_def)
         about_control.isPromoted = True
         about_control.isPromotedByDefault = True
         about_control.isVisible = False
+        # isEnabled does not work in the current version of Fusion 360 (2020-08-15):
+        # https://forums.autodesk.com/t5/fusion-360-api-and-scripts/how-to-disable-my-command-button-on-the-toolbar/td-p/9538998
         about_cmd_def.controlDefinition.isEnabled = False
 
 def stop(context):
