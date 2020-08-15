@@ -86,6 +86,7 @@ See [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimp
   * Fix Autodesk app store review items
     * Promote menu to top-level
     * Icons that show intent
+    * Fix *Activate Component* for root-level entities
   * Rename *Tracker* to *Recorder*
 * v 0.4.2
   * Change license to MIT

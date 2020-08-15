@@ -198,8 +198,13 @@ def activate_containing_component_handler(args: adsk.core.CommandCreatedEventArg
     if ui_.activeSelections.count == 1:
         selected = ui_.activeSelections[0].entity
         if selected.classType() not in ['adsk::fusion::Component', 'adsk::fusion::Occurrence']:
+            # Component not selected. Select the component.
             ui_.activeSelections.clear()
-            ui_.activeSelections.add(selected.assemblyContext)
+            if selected.assemblyContext is None:
+                # Root component
+                ui_.activeSelections.add(app_.activeProduct.rootComponent)
+            else:
+                ui_.activeSelections.add(selected.assemblyContext)
         ui_.commandDefinitions.itemById('FusionActivateLocalCompCmd').execute()
         ui_.commandDefinitions.itemById('FindInBrowser').execute()
 
