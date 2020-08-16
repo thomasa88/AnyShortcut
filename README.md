@@ -1,6 +1,6 @@
 # ![](resources/anyshortcut/32x32.png) AnyShortcut
 
-AnyShortcut is a Fusion 360 add-in for easily assigning keyboard shortcuts to commands where it is not usually possible to assign a shortcut*. It also has some built-in commands for Fusion 360 commands that cannot easily be capture and run without some extra tweaking (e.g. *Look At Sketch*).
+AnyShortcut is an Autodesk® Fusion 360™ add-in for easily assigning keyboard shortcuts to commands where it is not usually possible to assign a shortcut*. It also has some built-in commands for Fusion 360™ commands that cannot easily be capture and run without some extra tweaking (e.g. *Look At Sketch*).
 
 If you get any problems, please check out the section on [Fusion 360 quirks](#fusion-360-quirks).
 
@@ -25,7 +25,7 @@ When enabled, the add-in records the resulting commands of actions that the user
 
 If not stopped, the recording stops automatically after a number of commands, to avoid any performance degradation when the user is not setting up shortcuts.
 
-\* Not all actions in Fusion 360 result in "Commands" and some commands are not usable on their own. For example, *Pick Circle/Arc Tangent* does not generate a "Command" and *Roll History Marker Here* is triggered when clicking rewind in the history, but rewind actually first selects an item and then rolls.
+\* Not all actions in Fusion 360™ result in "Commands" and some commands are not usable on their own. For example, *Pick Circle/Arc Tangent* does not generate a "Command" and *Roll History Marker Here* is triggered when clicking rewind in the history, but rewind actually first selects an item and then rolls.
 
 ![Screenshot](tracker_screenshot.png)
 
@@ -41,11 +41,11 @@ To remove a shortcut, follow the same procedure. Hint: You can press the shortcu
 
 ## Fusion 360 Quirks
 
-Be aware of the following quirks in Fusion 360.
+Be aware of the following quirks in Fusion 360™.
 
-* Even though you've added a shortcut, it might not show up next time you restart Fusion 360. However, the shortcut still works and you see it if you open *Change Keyboard Shortcut*. (You can also verify using [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimple/blob/master/README.md))
+* Even though you've added a shortcut, it might not show up next time you restart Fusion 360™. However, the shortcut still works and you see it if you open *Change Keyboard Shortcut*. (You can also verify using [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimple/blob/master/README.md))
 
-* Fusion cannot handle all key combinations. Forget Alt+Left to rollback history, because Fusion 360 cannot save this combination and it will be broken next time you start Fusion 360.
+* Fusion 360™ cannot handle all key combinations. Forget Alt+Left to rollback history, because Fusion 360™ cannot save this combination and it will be broken next time you start Fusion 360™.
 
 * Menu items in sub-menus are not always clickable ([bug](https://forums.autodesk.com/t5/fusion-360-api-and-scripts/api-bug-cannot-click-menu-items-in-nested-dropdown/td-p/9669144)). However, you don't need to be able to click the commands to map a shortcut!
 
@@ -57,7 +57,7 @@ Unpack it into `API\AddIns` (see [How to install an add-in or script in Fusion 3
 
 Make sure the directory is named `AnyShortcut`, with no suffix.
 
-Press Shift+S in Fusion 360 and go to the *Add-Ins* tab. Then select the add-in and click the *Run* button. Optionally select *Run on Startup* (This is needed if you want the *AnyShortcut* built-in commands to function after restarting Fusion 360).
+Press Shift+S in Fusion 360™ and go to the *Add-Ins* tab. Then select the add-in and click the *Run* button. Optionally select *Run on Startup* (This is needed if you want the *AnyShortcut* built-in commands to function after restarting Fusion 360™).
 
 The new menu *TOOLS* -> *ANYSHORTCUT* is now available.
 
@@ -83,7 +83,7 @@ See [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimp
 ## Changelog
 
 * v 1.0.0
-  * Fix Autodesk app store review items
+  * Fix Autodesk® app store review items
     * Promote menu to top-level
     * Icons that show intent
     * Fix *Activate Component* for root-level entities
