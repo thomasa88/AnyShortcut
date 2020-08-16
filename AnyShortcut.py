@@ -56,7 +56,6 @@ PANEL_ID = 'thomasa88_anyShortcutPanel'
 MAIN_DROPDOWN_ID = 'thomasa88_anyShortcutMainDropdown'
 TRACKING_DROPDOWN_ID = 'thomasa88_anyShortcutDropdown'
 BUILTIN_DROPDOWN_ID = 'thomasa88_anyShortcutPremadeDropdown'
-DELAYED_EVENT_ID = 'thomasa88_anyShortcutEndOfQueueEvent'
 
 app_ = None
 ui_ = None
@@ -77,9 +76,6 @@ cmd_controls_ = deque()
 MAX_TRACK = 10
 track_count_ = 0
 tracking_ = False
-
-next_delay_id_ = 0
-delayed_funcs_ = {}
 
 termination_funcs_ = []
 termination_handler_info_ = None
@@ -180,7 +176,7 @@ def look_at_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
         on_command_terminate('LookAtCommand',
                              adsk.core.CommandTerminationReason.CancelledTerminationReason,
                              lambda: ui_.activeSelections.clear())
-        #delay(lambda: ui_.activeSelections.clear(), secs=1)
+        #events_manager_.delay(lambda: ui_.activeSelections.clear(), secs=1)
 
 def look_at_sketch_or_selected_handler(args: adsk.core.CommandCreatedEventArgs):
     # Look at is usually not added to the history - skip execution handler.
@@ -269,35 +265,9 @@ def create_view_orientation_handler(view_orientation_name):
         #         app_.activeViewport.camera = camera_copy
         #     #app_.activeViewport.refresh() Use this?
         
-        #delay(rotate_up, secs=1)
+        #events_manager_.delay(rotate_up, secs=1)
 
     return created_handler
-
-def delayed_event_handler(args: adsk.core.CustomEventArgs):
-    delay_id = int(args.additionalInfo)
-    func = delayed_funcs_.pop(delay_id, lambda: None)
-    func()
-
-def delay(func, secs=0):
-    '''Puts a function at the end of the event queue,
-    and optionally delays it.
-    '''
-    global next_delay_id_
-    delay_id = next_delay_id_
-    next_delay_id_ += 1
-
-    def waiter():
-        time.sleep(secs)
-        app_.fireCustomEvent(DELAYED_EVENT_ID, str(delay_id))
-
-    delayed_funcs_[delay_id] = func
-
-    if secs > 0:
-        thread = threading.Thread(target=waiter)
-        thread.isDaemon = True
-        thread.start()
-    else:
-        app_.fireCustomEvent(DELAYED_EVENT_ID, str(delay_id))
 
 def on_command_terminate(command_id, termination_reason, func):
     global termination_handler_info_
@@ -312,7 +282,7 @@ def command_terminated_handler(args):
 
     args = adsk.core.ApplicationCommandEventArgs.cast(args)
     
-    print("TERM", args.commandId, args.terminationReason, app_.activeEditObject.classType())
+    #print("TERM", args.commandId, args.terminationReason, app_.activeEditObject.classType())
     
     remove_indices = []
     for i, (command_id, termination_reason, func) in enumerate(termination_funcs_):
@@ -455,10 +425,6 @@ def run(context):
     with error_catcher_:
         app_ = adsk.core.Application.get()
         ui_ = app_.userInterface
-
-        delayed_event = events_manager_.register_event(DELAYED_EVENT_ID)
-        events_manager_.add_handler(delayed_event,
-                                    callback=delayed_event_handler)
 
         # Add the command to the tab.
         tab = ui_.allToolbarTabs.itemById('ToolsTab')
