@@ -458,7 +458,10 @@ def run(context):
 
         deploy = thomasa88lib.utils.get_fusion_deploy_folder()
         resource = thomasa88lib.utils.get_fusion_ui_resource_folder()
-        ui_.messageBox(f"Deploy: {deploy}\n\nResource: {resource}")
+        #ui_.messageBox(f"Deploy: {deploy}\n\nResource: {resource}")
+        look_at = ui_.commandDefinitions.itemById('LookAtCommand')
+        roll = ui_.commandDefinitions.itemById('FusionRollCommand')
+        ui_.messageBox(f"LookAt: {look_at.resourceFolder}\n\nRoll: {roll.resourceFolder}")
 
         delayed_event = events_manager_.register_event(DELAYED_EVENT_ID)
         events_manager_.add_handler(delayed_event,
