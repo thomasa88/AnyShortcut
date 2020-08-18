@@ -149,12 +149,14 @@ def stop_tracking():
     update_enable_text()
 
 def update_enable_text():
+    # Find path on Windows and Mac
+    neutron_ui_dir = ui_.commandDefinitions.itemById('LookAtCommand').resourceFolder.replace('/Commands/Resources/Camera/LookAt', '')
     if tracking_:
         text = f'Enable recording ({MAX_TRACK - track_count_} more unique commands)'
-        enable_cmd_def_.resourceFolder = thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Base/Resources/Browser/CheckBoxChecked'
+        enable_cmd_def_.resourceFolder = neutron_ui_dir + '/Base/Resources/Browser/CheckBoxChecked'
     else:
         text = f'Enable recording ({MAX_TRACK} unique commands)'
-        enable_cmd_def_.resourceFolder = thomasa88lib.utils.get_fusion_deploy_folder() + '/Neutron/UI/Base/Resources/Browser/CheckBoxUnchecked'
+        enable_cmd_def_.resourceFolder = neutron_ui_dir + '/Base/Resources/Browser/CheckBoxUnchecked'
     enable_cmd_def_.controlDefinition.name = text
 
 def look_at_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
@@ -325,12 +327,12 @@ def add_builtin_dropdown(parent):
                                     callback=handler)
         return cmd_def
 
+    look_at_res = ui_.commandDefinitions.itemById('LookAtCommand').resourceFolder
     c = create('thomasa88_anyShortcutListLookAtSketchCommand',
                 'Look At Sketch',
                 'Rotates the view to look at the sketch currently being edited. ' + 
                 'No action is performed if a sketch is not being edited.',
-                thomasa88lib.utils.get_fusion_deploy_folder() +
-                '/Neutron/UI/Commands/Resources/Camera/LookAt',
+                look_at_res,
                 look_at_sketch_handler)
     builtin_dropdown_.controls.addCommand(c)
 
@@ -339,17 +341,16 @@ def add_builtin_dropdown(parent):
                 'Rotates the view to look at, in priority order:\n' +
                 ' 1. The selected object, if any\n' +
                 ' 2. The sketch being edited',
-                thomasa88lib.utils.get_fusion_deploy_folder() +
-                '/Neutron/UI/Commands/Resources/Camera/LookAt',
+                look_at_res,
                 look_at_sketch_or_selected_handler)
     builtin_dropdown_.controls.addCommand(c)
 
+    activate_res = ui_.commandDefinitions.itemById('FusionActivateLocalCompCmd').resourceFolder
     c = create('thomasa88_anyShortcutListActivateContainingOrComponentCommand',
                 'Activate (containing) Component',
                 'Activates the selected component. If no component is selected, '
                 + 'the component directly containing the selected object is activated.',
-                thomasa88lib.utils.get_fusion_deploy_folder() +
-                '/Fusion/UI/FusionUI/Resources/Assembly/Activate',
+                activate_res,
                 activate_containing_component_handler)
     builtin_dropdown_.controls.addCommand(c)
 
@@ -368,41 +369,41 @@ def add_builtin_dropdown(parent):
     c = create('thomasa88_anyShortcutListRollToBeginning',
                 'Roll History Marker to Beginning',
                 '',
-                thomasa88lib.utils.get_fusion_deploy_folder() +
-                '/Fusion/UI/FusionUI/Resources/Timeline/RollBegin',
+                thomasa88lib.utils.get_fusion_ui_resource_folder() +
+                '/Timeline/RollBegin',
                 create_roll_history_handler('moveToBeginning'))
     timeline_dropdown.controls.addCommand(c)
 
     c = create('thomasa88_anyShortcutListRollBack',
                 'Roll History Marker Back',
                 '',
-                thomasa88lib.utils.get_fusion_deploy_folder() +
-                '/Fusion/UI/FusionUI/Resources/Timeline/RollBack',
+                thomasa88lib.utils.get_fusion_ui_resource_folder() +
+                '/Timeline/RollBack',
                 create_roll_history_handler('moveToPreviousStep'))
     timeline_dropdown.controls.addCommand(c)
     
     c = create('thomasa88_anyShortcutListRollForward',
                 'Roll History Marker Forward',
                 '',
-                thomasa88lib.utils.get_fusion_deploy_folder() +
-                '/Fusion/UI/FusionUI/Resources/Timeline/RollFwd',
+                thomasa88lib.utils.get_fusion_ui_resource_folder() +
+                '/Timeline/RollFwd',
                 create_roll_history_handler('movetoNextStep'))
     timeline_dropdown.controls.addCommand(c)
 
     c = create('thomasa88_anyShortcutListRollToEnd',
-        'Roll History Marker to End',
-        '',
-        thomasa88lib.utils.get_fusion_deploy_folder() +
-        '/Fusion/UI/FusionUI/Resources/Timeline/RollEnd',
-        create_roll_history_handler('moveToEnd'))
+               'Roll History Marker to End',
+               '',
+               thomasa88lib.utils.get_fusion_ui_resource_folder() +
+               '/Timeline/RollEnd',
+               create_roll_history_handler('moveToEnd'))
     timeline_dropdown.controls.addCommand(c)
 
     # timeline.play() just seems to skip to the end. Disabled.
     # c = create('thomasa88_anyShortcutListHistoryPlay',
     #     'Play History from Current Position',
     #     '',
-    #     thomasa88lib.utils.get_fusion_deploy_folder() +
-    #     '/Fusion/UI/FusionUI/Resources/Timeline/RollPlay',
+    #     thomasa88lib.utils.get_fusion_ui_resource_folder() +
+    #     '/Timeline/RollPlay',
     #     create_roll_history_handler('play'))
     # timeline_dropdown.controls.addCommand(c)
 
