@@ -80,6 +80,14 @@ Here is a table of some commands that can be interesting to map.
 
 See [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimple/blob/master/README.md).
 
+## Author
+
+This add-in is created by Thomas Axelsson.
+
+## License
+
+This project is licensed under the terms of the MIT license. See [LICENSE](LICENSE).
+
 ## Changelog
 
 * v 1.0.0
