@@ -90,6 +90,8 @@ This project is licensed under the terms of the MIT license. See [LICENSE](LICEN
 
 ## Changelog
 
+* v 1.0.1
+  * Fix issue [#1: No options under AnyShortcut in the plugins tab on Mac ](/thomasa88/AnyShortcut/issues/1)
 * v 1.0.0
   * Fix Autodesk® app store review items
     * Promote menu to top-level
