@@ -37,7 +37,7 @@ To set up a shortcut:
 * If you are lucky, the command will now have appeared at the bottom of the *AnyShortcut* menu.
 * Find the command in the menu and click the three dots to assign a shortcut as usual.
 
-To remove a shortcut, follow the same procedure. Hint: You can press the shortcut to trigger the command to be run.
+To remove a shortcut, follow the same procedure. Hint: You can press the shortcut to trigger the command to be run and make it appear in the recorder.
 
 ## Fusion 360 Quirks
 
@@ -57,9 +57,9 @@ Unpack it into `API\AddIns` (see [How to install an add-in or script in Fusion 3
 
 Make sure the directory is named `AnyShortcut`, with no suffix.
 
-Press Shift+S in Fusion 360™ and go to the *Add-Ins* tab. Then select the add-in and click the *Run* button. Optionally select *Run on Startup* (This is needed if you want the *AnyShortcut* built-in commands to function after restarting Fusion 360™).
-
 The new menu *TOOLS* -> *ANYSHORTCUT* is now available.
+
+The add-in can be temporarily disabled using the *Scripts and Add-ins* dialog. Press* Shift+S in Fusion 360™ and go to the *Add-Ins* tab.
 
 ## Ideas for commands to map
 
@@ -90,6 +90,8 @@ This project is licensed under the terms of the MIT license. See [LICENSE](LICEN
 
 ## Changelog
 
+* v 1.0.2
+  * Enable *Run on Startup* by default.
 * v 1.0.1
   * Fix issue [#1: No options under AnyShortcut in the plugins tab on Mac ](/thomasa88/AnyShortcut/issues/1)
 * v 1.0.0
