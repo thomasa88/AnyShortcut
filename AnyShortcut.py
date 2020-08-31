@@ -51,7 +51,6 @@ importlib.reload(thomasa88lib.error)
 importlib.reload(thomasa88lib.timeline)
 
 ENABLE_CMD_DEF_ID = 'thomasa88_anyShortcutList'
-ABOUT_CMD_DEF_ID = 'thomasa88_anyShortcutAbout'
 PANEL_ID = 'thomasa88_anyShortcutPanel'
 MAIN_DROPDOWN_ID = 'thomasa88_anyShortcutMainDropdown'
 TRACKING_DROPDOWN_ID = 'thomasa88_anyShortcutDropdown'
@@ -149,14 +148,12 @@ def stop_tracking():
     update_enable_text()
 
 def update_enable_text():
-    # Find path on Windows and Mac
-    neutron_ui_dir = ui_.commandDefinitions.itemById('LookAtCommand').resourceFolder.replace('/Commands/Resources/Camera/LookAt', '')
     if tracking_:
-        text = f'Enable recording ({MAX_TRACK - track_count_} more unique commands)'
-        enable_cmd_def_.resourceFolder = neutron_ui_dir + '/Base/Resources/Browser/CheckBoxChecked'
+        text = f'Stop recording (Auto-stop after {MAX_TRACK - track_count_} more commands)'
+        enable_cmd_def_.resourceFolder = './resources/stop'
     else:
-        text = f'Enable recording ({MAX_TRACK} unique commands)'
-        enable_cmd_def_.resourceFolder = neutron_ui_dir + '/Base/Resources/Browser/CheckBoxUnchecked'
+        text = f'Start recording (Auto-stop after {MAX_TRACK} unique commands)'
+        enable_cmd_def_.resourceFolder = './resources/record'
     enable_cmd_def_.controlDefinition.name = text
 
 def look_at_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
@@ -461,29 +458,11 @@ def run(context):
         events_manager_.add_handler(event=enable_cmd_def_.commandCreated,
                                     callback=enable_cmd_def__created_handler)
         
-        tracking_dropdown_.controls.addCommand(enable_cmd_def_)
+        enable_control = tracking_dropdown_.controls.addCommand(enable_cmd_def_)
+        enable_control.isPromoted = True
+        enable_control.isPromotedByDefault = True
         enable_cmd_def_.controlDefinition.isEnabled = False
         tracking_dropdown_.controls.addSeparator()
-
-        about_cmd_def = ui_.commandDefinitions.itemById(ABOUT_CMD_DEF_ID)
-        if about_cmd_def:
-            about_cmd_def.deleteMe()
-        about_cmd_def = ui_.commandDefinitions.addButtonDefinition(
-            ABOUT_CMD_DEF_ID,
-            f'{NAME} (v{manifest_["version"]})',
-            'Open the menu to add keyboard shortcuts to commands.',
-            './resources/anyshortcut')
-        events_manager_.add_handler(about_cmd_def.commandCreated,
-                                    callback=lambda args: ui_.messageBox(
-                                    'This icon should not be clickable, but it is, due to a Fusion bug.\n\n' +
-                                    'Click on the drop down menu to access the controls'))
-        about_control = panel_.controls.addCommand(about_cmd_def)
-        about_control.isPromoted = True
-        about_control.isPromotedByDefault = True
-        about_control.isVisible = False
-        # isEnabled does not work in the current version of Fusion 360 (2020-08-15):
-        # https://forums.autodesk.com/t5/fusion-360-api-and-scripts/how-to-disable-my-command-button-on-the-toolbar/td-p/9538998
-        about_cmd_def.controlDefinition.isEnabled = False
 
 def stop(context):
     with error_catcher_:

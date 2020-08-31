@@ -33,7 +33,7 @@ If not stopped, the recording stops automatically after a number of commands, to
 
 To set up a shortcut:
 
-* Click *Enable recording* and then perform the command you want to create a shortcut for
+* Click *Start recording* and then perform the command you want to create a shortcut for
 * If you are lucky, the command will now have appeared at the bottom of the *AnyShortcut* menu.
 * Find the command in the menu and click the three dots to assign a shortcut as usual.
 
@@ -59,7 +59,7 @@ Make sure the directory is named `AnyShortcut`, with no suffix.
 
 The new menu *TOOLS* -> *ANYSHORTCUT* is now available.
 
-The add-in can be temporarily disabled using the *Scripts and Add-ins* dialog. Press* Shift+S in Fusion 360™ and go to the *Add-Ins* tab.
+The add-in can be temporarily disabled using the *Scripts and Add-ins* dialog. Press *Shift+S* in Fusion 360™ and go to the *Add-Ins* tab.
 
 ## Ideas for commands to map
 
@@ -90,6 +90,8 @@ This project is licensed under the terms of the MIT license. See [LICENSE](LICEN
 
 ## Changelog
 
+* v 1.0.3
+  * Promote *Record*/*Stop* button to toolbar. Remove no-op *AnyShortcut* button.
 * v 1.0.2
   * Enable *Run on Startup* by default.
 * v 1.0.1
