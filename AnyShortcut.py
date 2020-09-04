@@ -324,12 +324,11 @@ def add_builtin_dropdown(parent):
                                     callback=handler)
         return cmd_def
 
-    look_at_res = ui_.commandDefinitions.itemById('LookAtCommand').resourceFolder
     c = create('thomasa88_anyShortcutListLookAtSketchCommand',
                 'Look At Sketch',
                 'Rotates the view to look at the sketch currently being edited. ' + 
                 'No action is performed if a sketch is not being edited.',
-                look_at_res,
+                './resources/lookatsketch',
                 look_at_sketch_handler)
     builtin_dropdown_.controls.addCommand(c)
 
@@ -338,16 +337,15 @@ def add_builtin_dropdown(parent):
                 'Rotates the view to look at, in priority order:\n' +
                 ' 1. The selected object, if any\n' +
                 ' 2. The sketch being edited',
-                look_at_res,
+                './resources/lookatselectedorsketch',
                 look_at_sketch_or_selected_handler)
     builtin_dropdown_.controls.addCommand(c)
 
-    activate_res = ui_.commandDefinitions.itemById('FusionActivateLocalCompCmd').resourceFolder
     c = create('thomasa88_anyShortcutListActivateContainingOrComponentCommand',
                 'Activate (containing) Component',
                 'Activates the selected component. If no component is selected, '
                 + 'the component directly containing the selected object is activated.',
-                activate_res,
+                './resources/activate',
                 activate_containing_component_handler)
     builtin_dropdown_.controls.addCommand(c)
 
