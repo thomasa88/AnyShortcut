@@ -90,6 +90,8 @@ This project is licensed under the terms of the MIT license. See [LICENSE](LICEN
 
 ## Changelog
 
+* v 1.1.0
+  * New custom icons for *Look At*, *Activate* and timeline actions.
 * v 1.0.3
   * Promote *Record*/*Stop* button to toolbar. Remove no-op *AnyShortcut* button.
 * v 1.0.2
