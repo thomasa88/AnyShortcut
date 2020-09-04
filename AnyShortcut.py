@@ -364,32 +364,28 @@ def add_builtin_dropdown(parent):
     c = create('thomasa88_anyShortcutListRollToBeginning',
                 'Roll History Marker to Beginning',
                 '',
-                thomasa88lib.utils.get_fusion_ui_resource_folder() +
-                '/Timeline/RollBegin',
+                './resources/timelinebeginning',
                 create_roll_history_handler('moveToBeginning'))
     timeline_dropdown.controls.addCommand(c)
 
     c = create('thomasa88_anyShortcutListRollBack',
                 'Roll History Marker Back',
                 '',
-                thomasa88lib.utils.get_fusion_ui_resource_folder() +
-                '/Timeline/RollBack',
+                './resources/timelineback',
                 create_roll_history_handler('moveToPreviousStep'))
     timeline_dropdown.controls.addCommand(c)
     
     c = create('thomasa88_anyShortcutListRollForward',
                 'Roll History Marker Forward',
                 '',
-                thomasa88lib.utils.get_fusion_ui_resource_folder() +
-                '/Timeline/RollFwd',
+                './resources/timelineforward',
                 create_roll_history_handler('movetoNextStep'))
     timeline_dropdown.controls.addCommand(c)
 
     c = create('thomasa88_anyShortcutListRollToEnd',
                'Roll History Marker to End',
                '',
-               thomasa88lib.utils.get_fusion_ui_resource_folder() +
-               '/Timeline/RollEnd',
+               './resources/timelineend',
                create_roll_history_handler('moveToEnd'))
     timeline_dropdown.controls.addCommand(c)
 
@@ -397,8 +393,7 @@ def add_builtin_dropdown(parent):
     # c = create('thomasa88_anyShortcutListHistoryPlay',
     #     'Play History from Current Position',
     #     '',
-    #     thomasa88lib.utils.get_fusion_ui_resource_folder() +
-    #     '/Timeline/RollPlay',
+    #     './resources/timelineplay',
     #     create_roll_history_handler('play'))
     # timeline_dropdown.controls.addCommand(c)
 
