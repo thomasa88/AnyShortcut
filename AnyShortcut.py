@@ -29,7 +29,7 @@ import adsk.core, adsk.fusion, adsk.cam, traceback
 from collections import deque
 import math
 import os
-import threading
+import operator
 import time
 
 NAME = 'AnyShortcut'
@@ -188,6 +188,59 @@ def look_at_sketch_or_selected_handler(args: adsk.core.CommandCreatedEventArgs):
     else:
         ui_.commandDefinitions.itemById('LookAtCommand').execute()
 
+def view_normal_to_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
+    # View commands are usually not added to the history - skip execution handler.
+    # Avoid getting listed as a repeatable command.
+    args.command.isRepeatable = False
+    # if ui_.activeSelections.count == 0:
+    #     edit_object = app_.activeEditObject
+    #     if edit_object.classType() == 'adsk::fusion::Sketch':
+    #         look_at_sketch_handler(args)
+    # else:
+    #     ui_.commandDefinitions.itemById('LookAtCommand').execute()
+    edit_object = app_.activeEditObject
+    if edit_object.classType() == 'adsk::fusion::Sketch':
+        sketch = edit_object
+        # Make sure we have unit vectors
+        sketch_x = sketch.xDirection
+        sketch_x.normalize()
+        sketch_y = sketch.yDirection
+        sketch_y.normalize()
+
+        camera = app_.activeViewport.camera
+
+        # normal will be a unit vector since x and y are perpendicular
+        normal = sketch_x.crossProduct(sketch_y)
+        camera_distance = camera.eye.distanceTo(camera.target)
+
+        eye_vector = camera.target.vectorTo(camera.eye)
+        eye_sign = normal.dotProduct(eye_vector)
+        # This has no effect?
+        normal.scaleBy(math.copysign(camera_distance, eye_sign))
+        new_eye = camera.target
+        new_eye.translateBy(normal)
+        
+        # Is camera up vector closest to +X, -X, +Y or -Y direction?
+        # angleTo() only gives values in [0, pi], but we need the sign
+        camera_up = camera.upVector
+        camera_up.normalize()
+        # Since we have perpendicular unit vectors, could we just do a check for e.g. dot product > value?
+        x_closeness = camera_up.dotProduct(sketch_x)
+        y_closeness = camera_up.dotProduct(sketch_y)
+        if False and abs(x_closeness) > abs(y_closeness):
+            closest_dir = sketch_x
+            closest_sign = x_closeness
+        else:
+            closest_dir = sketch_y
+            closest_sign = y_closeness
+        
+        new_up = closest_dir
+        new_up.scaleBy(math.copysign(1, closest_sign))
+
+        camera.eye = new_eye
+        camera.upVector = new_up
+        app_.activeViewport.camera = camera
+
 def activate_containing_component_handler(args: adsk.core.CommandCreatedEventArgs):
     args.command.isRepeatable = False
     if ui_.activeSelections.count == 1:
@@ -339,6 +392,14 @@ def add_builtin_dropdown(parent):
                 ' 2. The sketch being edited',
                 './resources/lookatselectedorsketch',
                 look_at_sketch_or_selected_handler)
+    builtin_dropdown_.controls.addCommand(c)
+
+    c = create('thomasa88_anyShortcutListNormalToSketchCommand',
+                'View Normal to Sketch',
+                'Rotates the view to look at the sketch being edited, ' +
+                'without paning.',
+                './resources/lookatselectedorsketch',
+                view_normal_to_sketch_handler)
     builtin_dropdown_.controls.addCommand(c)
 
     c = create('thomasa88_anyShortcutListActivateContainingOrComponentCommand',
