@@ -188,6 +188,7 @@ def look_at_sketch_or_selected_handler(args: adsk.core.CommandCreatedEventArgs):
     else:
         ui_.commandDefinitions.itemById('LookAtCommand').execute()
 
+### Use this rotation for Look at, to avoid having to do the select and make it quicker
 def view_normal_to_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
     # View commands are usually not added to the history - skip execution handler.
     # Avoid getting listed as a repeatable command.
@@ -213,12 +214,35 @@ def view_normal_to_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
         normal = sketch_x.crossProduct(sketch_y)
         camera_distance = camera.eye.distanceTo(camera.target)
 
-        eye_vector = camera.target.vectorTo(camera.eye)
-        eye_sign = normal.dotProduct(eye_vector)
+
+
+        target_eye_vector = camera.target.vectorTo(camera.eye)
+        eye_sign = normal.dotProduct(target_eye_vector)
+
+        target_eye_line = adsk.core.InfiniteLine3D.create(camera.target, target_eye_vector)
+        # ### Find another way, so it will work in non-parametric designs
+        # ###sketch.referencePlane.
+        plane = adsk.core.Plane.create(sketch.origin, normal)
+        
+        # check for None
+        plane_point = plane.intersectWithLine(target_eye_line)
+
+        new_eye = plane_point.copy()
+        new_eye_vector = normal.copy()
+        new_eye_vector.scaleBy(camera.eye.distanceTo(plane_point))
+        new_eye.translateBy(new_eye_vector)
+
+        new_target = plane_point.copy()
+        new_target_vector = normal.copy()
+        new_target_vector.scaleBy(math.copysign(camera.target.distanceTo(plane_point), -1))
+        new_target.translateBy(new_target_vector)
+
         # This has no effect?
-        normal.scaleBy(math.copysign(camera_distance, eye_sign))
-        new_eye = camera.target
-        new_eye.translateBy(normal)
+        # normal.scaleBy(math.copysign(camera_distance, eye_sign))
+        # new_eye = camera.target
+        # new_eye.translateBy(normal)
+
+        ### Måste ta reda på var sketch ligger mellan target och eye, sen rotera båda runt den punkten.
         
         # Is camera up vector closest to +X, -X, +Y or -Y direction?
         # angleTo() only gives values in [0, pi], but we need the sign
@@ -237,8 +261,13 @@ def view_normal_to_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
         new_up = closest_dir
         new_up.scaleBy(math.copysign(1, closest_sign))
 
-        camera.eye = new_eye
+        ## Hur hålla sig kvar över det man ritar, om det inte är i kamerans mitt? flytta target först?
+        ## ej flytta eye!? medel?
+
+        #camera.eye = new_eye
         camera.upVector = new_up
+        camera.target = new_target
+        camera.eye = new_eye
         app_.activeViewport.camera = camera
 
 def activate_containing_component_handler(args: adsk.core.CommandCreatedEventArgs):
