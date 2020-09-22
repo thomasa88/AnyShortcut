@@ -157,28 +157,18 @@ def update_enable_text():
     enable_cmd_def_.controlDefinition.name = text
 
 def look_at_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
-    # Look at is usually not added to the history - skip execution.
+    # Look At is usually not added to the history - skip execution.
     # Avoid getting listed as a repeatable command.
     args.command.isRepeatable = False
     edit_object = app_.activeEditObject
     if edit_object.classType() == 'adsk::fusion::Sketch':
-        # laughingcreek provided the way that Fusion actually does this "Look At"
-        # https://forums.autodesk.com/t5/fusion-360-design-validate/shortcut-for-look-at/m-p/9517669/highlight/true#M217044
-        ui_.activeSelections.clear()
-        ui_.activeSelections.add(edit_object)
-        ui_.commandDefinitions.itemById('LookAtCommand').execute()
-
-        # We must give the Look At command time to run. This seems to imitate the
-        # way that Fusion does it.
-        # Using lambda to get fresh/valid instance of activeSelections at the end of
-        # the wait.
-        on_command_terminate('LookAtCommand',
-                             adsk.core.CommandTerminationReason.CancelledTerminationReason,
-                             lambda: ui_.activeSelections.clear())
-        #events_manager_.delay(lambda: ui_.activeSelections.clear(), secs=1)
+        # Doing this ourselves instead of calling Look At, to speed it up
+        # and avoid changing the active selection
+        # "Look At" for a sketch "flattens" the view and centers on the origin
+        view_normal_to_sketch(edit_object, center_on_origin=True)
 
 def look_at_sketch_or_selected_handler(args: adsk.core.CommandCreatedEventArgs):
-    # Look at is usually not added to the history - skip execution handler.
+    # Look At is usually not added to the history - skip execution handler.
     # Avoid getting listed as a repeatable command.
     args.command.isRepeatable = False
     if ui_.activeSelections.count == 0:
@@ -188,87 +178,79 @@ def look_at_sketch_or_selected_handler(args: adsk.core.CommandCreatedEventArgs):
     else:
         ui_.commandDefinitions.itemById('LookAtCommand').execute()
 
-### Use this rotation for Look at, to avoid having to do the select and make it quicker
 def view_normal_to_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
     # View commands are usually not added to the history - skip execution handler.
     # Avoid getting listed as a repeatable command.
     args.command.isRepeatable = False
-    # if ui_.activeSelections.count == 0:
-    #     edit_object = app_.activeEditObject
-    #     if edit_object.classType() == 'adsk::fusion::Sketch':
-    #         look_at_sketch_handler(args)
-    # else:
-    #     ui_.commandDefinitions.itemById('LookAtCommand').execute()
     edit_object = app_.activeEditObject
     if edit_object.classType() == 'adsk::fusion::Sketch':
-        sketch = edit_object
-        # Make sure we have unit vectors
-        sketch_x = sketch.xDirection
-        sketch_x.normalize()
-        sketch_y = sketch.yDirection
-        sketch_y.normalize()
+        view_normal_to_sketch(edit_object)
 
-        camera = app_.activeViewport.camera
+def look_at_selected_or_view_normal_to_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
+    # View commands are usually not added to the history - skip execution handler.
+    # Avoid getting listed as a repeatable command.
+    args.command.isRepeatable = False
+    if ui_.activeSelections.count == 0:
+        edit_object = app_.activeEditObject
+        if edit_object.classType() == 'adsk::fusion::Sketch':
+            view_normal_to_sketch_handler(args)
+    else:
+        ui_.commandDefinitions.itemById('LookAtCommand').execute()
 
-        # normal will be a unit vector since x and y are perpendicular
-        normal = sketch_x.crossProduct(sketch_y)
-        camera_distance = camera.eye.distanceTo(camera.target)
+def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=False):
+    # Make sure we have unit vectors
+    sketch_x = sketch.xDirection
+    sketch_x.normalize()
+    sketch_y = sketch.yDirection
+    sketch_y.normalize()
 
+    camera = app_.activeViewport.camera
 
+    # normal will be a unit vector since x and y are perpendicular
+    sketch_normal = sketch_x.crossProduct(sketch_y)
 
-        target_eye_vector = camera.target.vectorTo(camera.eye)
-        eye_sign = normal.dotProduct(target_eye_vector)
+    target_eye_vector = camera.target.vectorTo(camera.eye)
 
-        target_eye_line = adsk.core.InfiniteLine3D.create(camera.target, target_eye_vector)
-        # ### Find another way, so it will work in non-parametric designs
-        # ###sketch.referencePlane.
-        plane = adsk.core.Plane.create(sketch.origin, normal)
-        
-        # check for None
-        plane_point = plane.intersectWithLine(target_eye_line)
+    target_eye_line = adsk.core.InfiniteLine3D.create(camera.target, target_eye_vector)
+    sketch_plane = adsk.core.Plane.create(sketch.origin, sketch_normal)
 
-        new_eye = plane_point.copy()
-        new_eye_vector = normal.copy()
-        new_eye_vector.scaleBy(camera.eye.distanceTo(plane_point))
-        new_eye.translateBy(new_eye_vector)
+    plane_point = sketch_plane.intersectWithLine(target_eye_line)
+    if plane_point is None:
+        # Don't seem to hit this even when using the view cube to view perpendiculary to the
+        # plane, so just skip if this happens.
+        return
 
-        new_target = plane_point.copy()
-        new_target_vector = normal.copy()
-        new_target_vector.scaleBy(math.copysign(camera.target.distanceTo(plane_point), -1))
-        new_target.translateBy(new_target_vector)
+    new_eye_vector = sketch_normal.copy()
+    new_eye_vector.scaleBy(camera.eye.distanceTo(plane_point))
+    new_eye = plane_point.copy() if not center_on_origin else sketch.origin.copy()
+    new_eye.translateBy(new_eye_vector)
 
-        # This has no effect?
-        # normal.scaleBy(math.copysign(camera_distance, eye_sign))
-        # new_eye = camera.target
-        # new_eye.translateBy(normal)
+    new_target_vector = sketch_normal.copy()
+    new_target_vector.scaleBy(math.copysign(camera.target.distanceTo(plane_point), -1))
+    new_target = plane_point.copy() if not center_on_origin else sketch.origin.copy()
+    new_target.translateBy(new_target_vector)
 
-        ### Måste ta reda på var sketch ligger mellan target och eye, sen rotera båda runt den punkten.
-        
-        # Is camera up vector closest to +X, -X, +Y or -Y direction?
-        # angleTo() only gives values in [0, pi], but we need the sign
-        camera_up = camera.upVector
-        camera_up.normalize()
-        # Since we have perpendicular unit vectors, could we just do a check for e.g. dot product > value?
-        x_closeness = camera_up.dotProduct(sketch_x)
-        y_closeness = camera_up.dotProduct(sketch_y)
-        if False and abs(x_closeness) > abs(y_closeness):
-            closest_dir = sketch_x
-            closest_sign = x_closeness
-        else:
-            closest_dir = sketch_y
-            closest_sign = y_closeness
-        
-        new_up = closest_dir
-        new_up.scaleBy(math.copysign(1, closest_sign))
+    # Is camera up vector closest to +X, -X, +Y or -Y direction?
+    # angleTo() only gives values in [0, pi], but we need the sign
+    camera_up = camera.upVector
+    camera_up.normalize()
+    # Since we have perpendicular unit vectors, could we just do a check for e.g. dot product > value?
+    x_closeness = camera_up.dotProduct(sketch_x)
+    y_closeness = camera_up.dotProduct(sketch_y)
+    if ninety_degree_steps and abs(x_closeness) > abs(y_closeness):
+        closest_dir = sketch_x
+        closest_sign = x_closeness
+    else:
+        closest_dir = sketch_y
+        closest_sign = y_closeness
+    
+    new_up = closest_dir
+    new_up.scaleBy(math.copysign(1, closest_sign))
 
-        ## Hur hålla sig kvar över det man ritar, om det inte är i kamerans mitt? flytta target först?
-        ## ej flytta eye!? medel?
-
-        #camera.eye = new_eye
-        camera.upVector = new_up
-        camera.target = new_target
-        camera.eye = new_eye
-        app_.activeViewport.camera = camera
+    camera.target = new_target
+    camera.eye = new_eye
+    camera.upVector = new_up
+    app_.activeViewport.camera = camera
 
 def activate_containing_component_handler(args: adsk.core.CommandCreatedEventArgs):
     args.command.isRepeatable = False
@@ -408,7 +390,8 @@ def add_builtin_dropdown(parent):
 
     c = create('thomasa88_anyShortcutListLookAtSketchCommand',
                 'Look At Sketch',
-                'Rotates the view to look at the sketch currently being edited. ' + 
+                'Rotates the view to look at the sketch currently being edited. ' +
+                'The view is centered on the origin.\n\n' +
                 'No action is performed if a sketch is not being edited.',
                 './resources/lookatsketch',
                 look_at_sketch_handler)
@@ -418,7 +401,8 @@ def add_builtin_dropdown(parent):
                 'Look At Selected or Sketch',
                 'Rotates the view to look at, in priority order:\n' +
                 ' 1. The selected object, if any\n' +
-                ' 2. The sketch being edited',
+                ' 2. The sketch being edited\n\n' +
+                'The view is centered on the origin, if a looking at a sketch.',
                 './resources/lookatselectedorsketch',
                 look_at_sketch_or_selected_handler)
     builtin_dropdown_.controls.addCommand(c)
@@ -426,9 +410,19 @@ def add_builtin_dropdown(parent):
     c = create('thomasa88_anyShortcutListNormalToSketchCommand',
                 'View Normal to Sketch',
                 'Rotates the view to look at the sketch being edited, ' +
-                'without paning.',
-                './resources/lookatselectedorsketch',
+                'without panning.',
+                './resources/lookatsketch',
                 view_normal_to_sketch_handler)
+    builtin_dropdown_.controls.addCommand(c)
+
+    c = create('thomasa88_anyShortcutListLookAtSelectedOrNormalToSketchCommand',
+                'Look At Selected or View Normal to Sketch',
+                'Rotates the view to look at, in priority order:\n' +
+                ' 1. The selected object, if any\n' +
+                ' 2. The sketch being edited\n\n' +
+                'The view does not pan, if a looking at a sketch.',
+                './resources/lookatselectedorsketch',
+                look_at_selected_or_view_normal_to_sketch_handler)
     builtin_dropdown_.controls.addCommand(c)
 
     c = create('thomasa88_anyShortcutListActivateContainingOrComponentCommand',
