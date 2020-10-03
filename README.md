@@ -49,6 +49,11 @@ Be aware of the following quirks in Fusion 360™.
 
 * Menu items in sub-menus are not always clickable ([bug](https://forums.autodesk.com/t5/fusion-360-api-and-scripts/api-bug-cannot-click-menu-items-in-nested-dropdown/td-p/9669144)). However, you don't need to be able to click the commands to map a shortcut!
 
+## Supported Platforms
+
+  * Windows
+  * Mac OS
+
 ## Installation
 
 Download the add-in from the [Releases](https://github.com/thomasa88/AnyShortcut/releases) page.
@@ -80,6 +85,12 @@ Here is a table of some commands that can be interesting to map.
 
 See [KeyboardShortcutsSimple](https://github.com/thomasa88/KeyboardShortcutsSimple/blob/master/README.md).
 
+## Reporting Issues
+
+Please report any issues that you find in the add-in on the [Issues](https://github.com/thomasa88/AnyShortcut/issues) page.
+
+For better support, please include the steps you performed and the result. Also include copies of any error messages.
+
 ## Author
 
 This add-in is created by Thomas Axelsson.
@@ -87,6 +98,12 @@ This add-in is created by Thomas Axelsson.
 ## License
 
 This project is licensed under the terms of the MIT license. See [LICENSE](LICENSE).
+
+## More Fusion 360™ Add-ins
+
+[My Fusion 360™ app store page](https://apps.autodesk.com/en/Publisher/PublisherHomepage?ID=JLH9M8296BET)
+
+[All my add-ins on Github](https://github.com/topics/fusion-360?q=user%3Athomasa88)
 
 ## Changelog
 
