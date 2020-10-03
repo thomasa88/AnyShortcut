@@ -415,6 +415,17 @@ def add_builtin_dropdown(parent):
                 view_normal_to_sketch_handler)
     builtin_dropdown_.controls.addCommand(c)
 
+#### Change to View Normal on objects too!
+# Possible objects: BRepFace, Profile (for sketch), 
+# Test a cylindrical face. Look At puts the cylinder straight and looks at the cylindrical face.
+# Look At also centers the view on the face. Should we do that? No? The user can use Look At in that case.
+# brepface: .centroid, .pointOnFace, .geometry?, .evaluator?, .vertices?
+# .geometry is a Plane for a flat face - what about a cylindrical face? sphere? -> We get Sphere and Cylinder x)
+# .. NurbsSurface for coil (also for a cut done with a coil) and curving loft, 
+#### What about a wavy face (e.g. boundary face) or a cut cylinder?
+# profile: .plane (normal, origin, uDirection, vDirection)
+# evaluator has getNormalAtPoint(), but we have no center to use? no boundingbox for nurbssurface?
+#---- can we use any of the U/V properties?
     c = create('thomasa88_anyShortcutListLookAtSelectedOrNormalToSketchCommand',
                 'Look At Selected or View Normal to Sketch',
                 'Rotates the view to look at, in priority order:\n' +
