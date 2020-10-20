@@ -186,7 +186,7 @@ def view_normal_to_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
     if edit_object.classType() == 'adsk::fusion::Sketch':
         view_normal_to_sketch(edit_object)
 
-def look_at_selected_or_view_normal_to_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
+def view_normal_to_selected_or_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
     # View commands are usually not added to the history - skip execution handler.
     # Avoid getting listed as a repeatable command.
     args.command.isRepeatable = False
@@ -195,9 +195,40 @@ def look_at_selected_or_view_normal_to_sketch_handler(args: adsk.core.CommandCre
         if edit_object.classType() == 'adsk::fusion::Sketch':
             view_normal_to_sketch_handler(args)
     else:
-        ui_.commandDefinitions.itemById('LookAtCommand').execute()
+        view_normal_to_object(ui_.activeSelections[0].entity)
+        #ui_.commandDefinitions.itemById('LookAtCommand').execute()
 
 def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=False):
+    #                                                                                               
+    #  Rotate the camera to look at the selected sketch. The distances (eye, plane_point) and      
+    #  (target, plane_point) are kept, to not zoom in/out. The camera up direction is set to       
+    #  the closest sketch Y or X/Y direction.                                                      
+    #                                                                                           
+    #                                                                      new_target O            
+    #                                                                                 |            
+    #                               target  O                                         |            
+    #                                      /                                          |            
+    #                                     /                                           |            
+    #                                    /                                            |            
+    #   +-------------------------------/-----+            +--------------------------|----------+ 
+    #   |                              /      |            |                          |          | 
+    #   |                             /       |            |                          |          | 
+    #   |                            /        |            |                          |          | 
+    #   |                           /         |            |                          |          | 
+    #   |                          /          |            |                          |          | 
+    #   |            plane_point  X           |            |            plane_point   X          | 
+    #   |                        /            |            |                          |          | 
+    #   |       up  ^           /             |            |                          |          | 
+    #   |            \         /              |            |                          |          | 
+    #   |             \       /               |            |                  new_up  ^          | 
+    #   +--------------\-----/----------------+            +--------------------------|----------+ 
+    #                   \   /                                                         |            
+    #                    \ /                                                          |            
+    #                eye  O                                                           |            
+    #                                                                                 |            
+    #                                                                        new_eye  O            
+    #
+
     # Make sure we have unit vectors
     sketch_x = sketch.xDirection
     sketch_x.normalize()
@@ -251,6 +282,35 @@ def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=Fa
     camera.eye = new_eye
     camera.upVector = new_up
     app_.activeViewport.camera = camera
+
+def view_normal_to_object(entity):
+    #### Change to View Normal on objects too!
+    # Possible objects: BRepFace, Profile (for sketch), 
+    # Test a cylindrical face. Look At puts the cylinder straight and looks at the cylindrical face.
+    # Look At also centers the view on the face. Should we do that? No? The user can use Look At in that case.
+    # brepface: .centroid, .pointOnFace, .geometry?, .evaluator?, .vertices?
+    # .geometry is a Plane for a flat face - what about a cylindrical face? sphere? -> We get Sphere and Cylinder x)
+    # .. NurbsSurface for coil (also for a cut done with a coil) and curving loft, 
+    #### What about a wavy face (e.g. boundary face) or a cut cylinder?
+    # profile: .plane (normal, origin, uDirection, vDirection)
+    # evaluator has getNormalAtPoint(), but we have no center to use? no boundingbox for nurbssurface?
+    #---- can we use any of the U/V properties?
+    if isinstance(entity, adsk.fusion.Profile):
+        # Sketch profile
+        profile: adsk.fusion.Profile = entity
+    elif isinstance(entity, adsk.fusion.BRepFace):
+        face: adsk.fusion.BRepFace = entity
+        # Surface (face.geometry) classes:
+        # Cone, Cylinder, EllipticalCone, EllipticalCylinder, NurbsSurface, Plane, Sphere, Torus
+        if isinstance(face.geometry, adsk.core.Plane):
+            plane: adsk.core.Plane = face.geometry
+            normal = plane.normal
+            # also: point where eye-target and plane intersects. Get that here or in later function?
+        #elif isinstance(face.geometry, adsk.core.)
+        else:
+            ui_.messageBox('Cannot handle this geometry: {type(entity)}.\n\nPlease report to the developer.', 'View Normal')
+    else:
+        ui_.messageBox('Cannot handle this face: {type(entity)}.\n\nPlease report to the developer.', 'View Normal')
 
 def activate_containing_component_handler(args: adsk.core.CommandCreatedEventArgs):
     args.command.isRepeatable = False
@@ -415,25 +475,14 @@ def add_builtin_dropdown(parent):
                 view_normal_to_sketch_handler)
     builtin_dropdown_.controls.addCommand(c)
 
-#### Change to View Normal on objects too!
-# Possible objects: BRepFace, Profile (for sketch), 
-# Test a cylindrical face. Look At puts the cylinder straight and looks at the cylindrical face.
-# Look At also centers the view on the face. Should we do that? No? The user can use Look At in that case.
-# brepface: .centroid, .pointOnFace, .geometry?, .evaluator?, .vertices?
-# .geometry is a Plane for a flat face - what about a cylindrical face? sphere? -> We get Sphere and Cylinder x)
-# .. NurbsSurface for coil (also for a cut done with a coil) and curving loft, 
-#### What about a wavy face (e.g. boundary face) or a cut cylinder?
-# profile: .plane (normal, origin, uDirection, vDirection)
-# evaluator has getNormalAtPoint(), but we have no center to use? no boundingbox for nurbssurface?
-#---- can we use any of the U/V properties?
     c = create('thomasa88_anyShortcutListLookAtSelectedOrNormalToSketchCommand',
-                'Look At Selected or View Normal to Sketch',
+                'View Normal to Selected or Sketch',
                 'Rotates the view to look at, in priority order:\n' +
                 ' 1. The selected object, if any\n' +
                 ' 2. The sketch being edited\n\n' +
                 'The view does not pan, if a looking at a sketch.',
                 './resources/lookatselectedorsketch',
-                look_at_selected_or_view_normal_to_sketch_handler)
+                view_normal_to_selected_or_sketch_handler)
     builtin_dropdown_.controls.addCommand(c)
 
     c = create('thomasa88_anyShortcutListActivateContainingOrComponentCommand',
