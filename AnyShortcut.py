@@ -454,7 +454,6 @@ def run(context):
         enable_control = tracking_dropdown_.controls.addCommand(enable_cmd_def_)
         enable_control.isPromoted = True
         enable_control.isPromotedByDefault = True
-        enable_cmd_def_.controlDefinition.isEnabled = False
         tracking_dropdown_.controls.addSeparator()
 
 def stop(context):
