@@ -290,22 +290,7 @@ def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=Fa
     new_target = center_point.copy()
     new_target.translateBy(new_target_vector)
 
-    # Is camera up vector closest to +X, -X, +Y or -Y direction?
-    # angleTo() only gives values in [0, pi], but we need the sign
-    camera_up = camera.upVector
-    camera_up.normalize()
-    # Since we have perpendicular unit vectors, could we just do a check for e.g. dot product > value?
-    x_closeness = camera_up.dotProduct(sketch_x)
-    y_closeness = camera_up.dotProduct(sketch_y)
-    if ninety_degree_steps and abs(x_closeness) > abs(y_closeness):
-        closest_dir = sketch_x
-        closest_sign = x_closeness
-    else:
-        closest_dir = sketch_y
-        closest_sign = y_closeness
-    
-    new_up = closest_dir
-    new_up.scaleBy(math.copysign(1, closest_sign))
+    new_up = snap_vector(camera.upVector, sketch_x, sketch_y, ninety_degree_steps)
 
     #print(f"OLD target: {point_str(camera.target)}, eye: {point_str(camera.eye)}, up: {point_str(camera.upVector)}")
     #print(f"NEW target: {point_str(new_target)}, eye: {point_str(new_eye)}, up: {point_str(new_up)}")
@@ -321,6 +306,25 @@ def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=Fa
 
     # Needed?
     app_.activeViewport.refresh()
+
+def snap_vector(vector, axis1_vector, axis2_vector, ninety_degree_steps=True):
+    '''Snaps the given vector to the closest axis (vector)'''
+    # Is camera up vector closest to +X, -X, +Y or -Y direction?
+    # angleTo() only gives values in [0, pi], but we need the sign
+    vector.normalize()
+    # Since we have perpendicular unit vectors, could we just do a check for e.g. dot product > value?
+    x_closeness = vector.dotProduct(axis1_vector)
+    y_closeness = vector.dotProduct(axis2_vector)
+    if ninety_degree_steps and abs(x_closeness) > abs(y_closeness):
+        closest_dir = axis1_vector
+        closest_sign = math.copysign(1, x_closeness)
+    else:
+        closest_dir = axis2_vector
+        closest_sign = math.copysign(1, y_closeness)
+    
+    new_up = closest_dir
+    new_up.scaleBy(closest_sign)
+    return new_up
 
 def point_str(point):
     return '(' + ', '.join(['{: 6.2f}'.format(c) for c in point.asArray()]) + ')'
@@ -395,6 +399,25 @@ def create_roll_history_handler(move_function_name):
 
     return created_handler
 
+# Matrix that shifts/rotates x, y, z positions in the vector
+rot_matrix = adsk.core.Matrix3D.create()
+rot_matrix.setWithArray([
+    0, 0, 1, 0,
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 0, 1,]
+)
+
+# Z-up orientations
+view_vectors = {
+    'Front': adsk.core.Vector3D.create(0.0, -1.0, 0.0),
+    'Back': adsk.core.Vector3D.create(0.0, 1.0, 0.0),
+    'Left': adsk.core.Vector3D.create(-1.0, 0.0, 0.0),
+    'Right': adsk.core.Vector3D.create(1.0, 0.0, 0.0),
+    'Top': adsk.core.Vector3D.create(0.0, 0.0, 1.0),
+    'Bottom': adsk.core.Vector3D.create(0.0, 0.0, -1.0),
+}
+
 def create_view_orientation_handler(view_orientation_name):
     def created_handler(args: adsk.core.CommandCreatedEventArgs):
         # We don't want undo history, so no execute handler
@@ -402,41 +425,66 @@ def create_view_orientation_handler(view_orientation_name):
         # Avoid getting listed as a repeatable command.
         args.command.isRepeatable = False
 
-        camera_copy = app_.activeViewport.camera
-        camera_copy.cameraType = adsk.core.CameraTypes.OrthographicCameraType #?
 
-        # Using viewOrientation always forces smooth animation?
-        camera_copy.isSmoothTransition = False
-        camera_copy.viewOrientation = getattr(adsk.core.ViewOrientations,
-                                              view_orientation_name + 'ViewOrientation')
-        app_.activeViewport.camera = camera_copy
-
-        # Must set the up vector after the orient rotation has been performed,
-        # with a delay, for it to work correctly.
-
-        # def rotate_up():
-        #     camera_copy = app_.activeViewport.camera
-        #     # defaultModelingOrientation does not give us the orientation for
-        #     # the current document.
-        #     # ---> We don't know which direction is up!
-        #     # Create duplicate sets of commands?
-        #     modeling_orientation = app_.preferences.generalPreferences.defaultModelingOrientation
-
-        #     # Z-Up orientation:
-        #     if view_orientation_name in ['Top', 'Bottom']:
-        #         up = adsk.core.Vector3D.create(0.0, 1.0, 0.0)
-        #     else:
-        #         up = adsk.core.Vector3D.create(0.0, 0.0, 1.0)
-            
-        #     if camera_copy.upVector.angleTo(up) > (math.pi / 4.0):
-        #         camera_copy.upVector = up
-        #         app_.activeViewport.camera = camera_copy
-        #     #app_.activeViewport.refresh() Use this?
+        # Using viewOrientation always forces smooth animation, so we cannot use that:
+        # camera_copy = app_.activeViewport.camera
+        # camera_copy.cameraType = adsk.core.CameraTypes.OrthographicCameraType #?
+        # camera_copy.viewOrientation = getattr(adsk.core.ViewOrientations,
+        #                                       view_orientation_name + 'ViewOrientation')
+        # app_.activeViewport.camera = camera_copy
+        # return
         
         # #adsk.doEvents()
-        # #rotate_up()
-        # events_manager_.delay(rotate_up, secs=1)
-        # #app_.activeViewport.refresh()
+
+        # Using viewOrientation always forces smooth animation, so lets move the camera ourselves
+        camera = app_.activeViewport.camera
+        camera.cameraType = adsk.core.CameraTypes.OrthographicCameraType #?
+        camera.isSmoothTransition = False
+
+        # Correct the eye-target vector orientation
+        # Moving eye, keeping target still:
+        # Get distance between eye and target, then use it on target with the desired orientation vector
+        new_eye_dir_vector = view_vectors[view_orientation_name]
+        eye_distance = camera.eye.distanceTo(camera.target)
+        eye_vector = new_eye_dir_vector.copy()
+        eye_vector.scaleBy(eye_distance)
+        new_eye = camera.target.copy()
+        new_eye.translateBy(eye_vector)
+
+        # print("MATRIX")
+        # for row in range(4):
+        #     row_list = []
+        #     for col in range(4):
+        #         row_list.append(rot_matrix.getCell(row, col))
+        #     print(row_list)
+
+        # Set the up vector. Using the orientation closest to current.
+        # If this does not work out, we may want to use this more complex method:
+        #  1. Before moving the camera, check if screen up is closest to current
+        #     "primary" view's UP, LEFT, BOTTOM, TOP. Save the value as cam_dir.
+        #  2. Move the camera to the correct position.
+        #  3. Use cam_dir and orient up according to this value relative to this
+        #     "primary" view.
+
+        # We want to now if the document is Z up or Y up.
+        # defaultModelingOrientation does not give us the orientation for
+        # the current document. ---> We don't know which direction is up!
+        # Create duplicate sets of commands?
+        # modeling_orientation = app_.preferences.generalPreferences.defaultModelingOrientation
+
+        up_vector = new_eye_dir_vector.copy()
+        up_vector.transformBy(rot_matrix)
+        right_vector =  up_vector.copy()
+        right_vector.transformBy(rot_matrix)
+        print("EYE", point_str(new_eye_dir_vector))
+        print("UP", point_str(up_vector), "RIGHT", point_str(right_vector))
+        new_up = snap_vector(camera.upVector, up_vector, right_vector, ninety_degree_steps=True)
+
+        camera.eye = new_eye
+        camera.upVector = new_up
+
+        app_.activeViewport.camera = camera
+        app_.activeViewport.refresh()
 
     return created_handler
 
