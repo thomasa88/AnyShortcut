@@ -198,6 +198,17 @@ def view_normal_to_selected_or_sketch_handler(args: adsk.core.CommandCreatedEven
         view_normal_to_object(ui_.activeSelections[0].entity)
         #ui_.commandDefinitions.itemById('LookAtCommand').execute()
 
+from ctypes import windll, Structure, c_long, byref
+
+class POINT(Structure):
+    _fields_ = [("x", c_long), ("y", c_long)]
+
+def win32_mouse_pos():
+    win_point = POINT()
+    windll.user32.GetCursorPos(byref(win_point))
+    #return (pt.x, pt.y)
+    return adsk.core.Point2D.create(win_point.x, win_point.y)
+
 def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=False):
     #                                                                                               
     #  Rotate the camera to look at the selected sketch. The distances (eye, plane_point) and      
@@ -229,6 +240,10 @@ def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=Fa
     #                                                                        new_eye  O            
     #
 
+    # Even though center_on_origin=False it sometimes seems like the object skips
+    # The problem is that we rotate the camera about the sketch plane, while a user might expect the
+    # camera to rotate about the center (center of gravity?) of the seen object.
+
     # Make sure we have unit vectors
     sketch_x = sketch.xDirection
     sketch_x.normalize()
@@ -252,22 +267,27 @@ def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=Fa
         # plane, so just skip if this happens.
         return
 
-    print()
-    print("NORMAL:", point_str(sketch_normal_vector), "PLANE POINT:", point_str(plane_point))
-    print("EYE TO PLANE POINT:", camera.eye.distanceTo(plane_point))
-
     # Determine if the eye vector is looking mostly along or opposite the sketch normal
     eye_sign = math.copysign(1, target_eye_vector.dotProduct(sketch_normal_vector))
 
-    print("TARGET-EYE VECTOR:", point_str(target_eye_vector), "S", math.copysign(1, target_eye_vector.dotProduct(sketch_normal_vector)))
+    center_point = sketch.origin.copy() if center_on_origin else plane_point.copy()
+
+    # Experiment: Rotate about the mouse    
+    # mouse_2d = app_.activeViewport.screenToView(win32_mouse_pos())
+    # mouse_3d = app_.activeViewport.viewToModelSpace(mouse_2d)
+    # eye_target_vector = camera.eye.vectorTo(camera.target)
+    # mouse_line = adsk.core.InfiniteLine3D.create(mouse_3d, eye_target_vector)
+    # mouse_3d = sketch_plane.intersectWithLine(mouse_line)
+    # center_point = mouse_3d
+
     new_eye_vector = sketch_normal_vector.copy()
     new_eye_vector.scaleBy(camera.eye.distanceTo(plane_point) * eye_sign)
-    new_eye = sketch.origin.copy() if center_on_origin else plane_point.copy()
+    new_eye = center_point.copy()
     new_eye.translateBy(new_eye_vector)
 
     new_target_vector = sketch_normal_vector.copy()
     new_target_vector.scaleBy(camera.target.distanceTo(plane_point) * -eye_sign)
-    new_target = sketch.origin.copy() if center_on_origin else plane_point.copy()
+    new_target = center_point.copy()
     new_target.translateBy(new_target_vector)
 
     # Is camera up vector closest to +X, -X, +Y or -Y direction?
@@ -287,8 +307,8 @@ def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=Fa
     new_up = closest_dir
     new_up.scaleBy(math.copysign(1, closest_sign))
 
-    print(f"OLD target: {point_str(camera.target)}, eye: {point_str(camera.eye)}, up: {point_str(camera.upVector)}")
-    print(f"NEW target: {point_str(new_target)}, eye: {point_str(new_eye)}, up: {point_str(new_up)}")
+    #print(f"OLD target: {point_str(camera.target)}, eye: {point_str(camera.eye)}, up: {point_str(camera.upVector)}")
+    #print(f"NEW target: {point_str(new_target)}, eye: {point_str(new_eye)}, up: {point_str(new_up)}")
 
     camera.target = new_target
     camera.eye = new_eye
