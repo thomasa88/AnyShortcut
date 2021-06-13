@@ -238,12 +238,13 @@ def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=Fa
     camera = app_.activeViewport.camera
 
     # normal will be a unit vector since x and y are perpendicular
-    sketch_normal = sketch_x.crossProduct(sketch_y)
+    sketch_normal_vector = sketch_x.crossProduct(sketch_y)
 
+    # Vector target->eye
     target_eye_vector = camera.target.vectorTo(camera.eye)
 
     target_eye_line = adsk.core.InfiniteLine3D.create(camera.target, target_eye_vector)
-    sketch_plane = adsk.core.Plane.create(sketch.origin, sketch_normal)
+    sketch_plane = adsk.core.Plane.create(sketch.origin, sketch_normal_vector)
 
     plane_point = sketch_plane.intersectWithLine(target_eye_line)
     if plane_point is None:
@@ -251,14 +252,22 @@ def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=Fa
         # plane, so just skip if this happens.
         return
 
-    new_eye_vector = sketch_normal.copy()
-    new_eye_vector.scaleBy(camera.eye.distanceTo(plane_point))
-    new_eye = plane_point.copy() if not center_on_origin else sketch.origin.copy()
+    print()
+    print("NORMAL:", point_str(sketch_normal_vector), "PLANE POINT:", point_str(plane_point))
+    print("EYE TO PLANE POINT:", camera.eye.distanceTo(plane_point))
+
+    # Determine if the eye vector is looking mostly along or opposite the sketch normal
+    eye_sign = math.copysign(1, target_eye_vector.dotProduct(sketch_normal_vector))
+
+    print("TARGET-EYE VECTOR:", point_str(target_eye_vector), "S", math.copysign(1, target_eye_vector.dotProduct(sketch_normal_vector)))
+    new_eye_vector = sketch_normal_vector.copy()
+    new_eye_vector.scaleBy(camera.eye.distanceTo(plane_point) * eye_sign)
+    new_eye = sketch.origin.copy() if center_on_origin else plane_point.copy()
     new_eye.translateBy(new_eye_vector)
 
-    new_target_vector = sketch_normal.copy()
-    new_target_vector.scaleBy(math.copysign(camera.target.distanceTo(plane_point), -1))
-    new_target = plane_point.copy() if not center_on_origin else sketch.origin.copy()
+    new_target_vector = sketch_normal_vector.copy()
+    new_target_vector.scaleBy(camera.target.distanceTo(plane_point) * -eye_sign)
+    new_target = sketch.origin.copy() if center_on_origin else plane_point.copy()
     new_target.translateBy(new_target_vector)
 
     # Is camera up vector closest to +X, -X, +Y or -Y direction?
@@ -278,10 +287,23 @@ def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=Fa
     new_up = closest_dir
     new_up.scaleBy(math.copysign(1, closest_sign))
 
+    print(f"OLD target: {point_str(camera.target)}, eye: {point_str(camera.eye)}, up: {point_str(camera.upVector)}")
+    print(f"NEW target: {point_str(new_target)}, eye: {point_str(new_eye)}, up: {point_str(new_up)}")
+
     camera.target = new_target
     camera.eye = new_eye
     camera.upVector = new_up
+
+    # Don't animate the camera change
+    camera.isSmoothTransition = False
+
     app_.activeViewport.camera = camera
+
+    # Needed?
+    app_.activeViewport.refresh()
+
+def point_str(point):
+    return '(' + ', '.join(['{: 6.2f}'.format(c) for c in point.asArray()]) + ')'
 
 def view_normal_to_object(entity):
     #### Change to View Normal on objects too!
@@ -362,6 +384,9 @@ def create_view_orientation_handler(view_orientation_name):
 
         camera_copy = app_.activeViewport.camera
         camera_copy.cameraType = adsk.core.CameraTypes.OrthographicCameraType #?
+
+        # Using viewOrientation always forces smooth animation?
+        camera_copy.isSmoothTransition = False
         camera_copy.viewOrientation = getattr(adsk.core.ViewOrientations,
                                               view_orientation_name + 'ViewOrientation')
         app_.activeViewport.camera = camera_copy
@@ -388,7 +413,10 @@ def create_view_orientation_handler(view_orientation_name):
         #         app_.activeViewport.camera = camera_copy
         #     #app_.activeViewport.refresh() Use this?
         
-        #events_manager_.delay(rotate_up, secs=1)
+        # #adsk.doEvents()
+        # #rotate_up()
+        # events_manager_.delay(rotate_up, secs=1)
+        # #app_.activeViewport.refresh()
 
     return created_handler
 
