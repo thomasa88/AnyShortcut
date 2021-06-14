@@ -206,10 +206,12 @@ class POINT(Structure):
 def win32_mouse_pos():
     win_point = POINT()
     windll.user32.GetCursorPos(byref(win_point))
-    #return (pt.x, pt.y)
     return adsk.core.Point2D.create(win_point.x, win_point.y)
 
 def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=False):
+    view_normal_to(sketch.origin, sketch.xDirection, sketch.yDirection, center_on_origin, ninety_degree_steps)
+
+def view_normal_to(sketch_origin, sketch_x, sketch_y, sketch_normal=None, center_on_origin=False, ninety_degree_steps=False):
     #                                                                                               
     #  Rotate the camera to look at the selected sketch. The distances (eye, plane_point) and      
     #  (target, plane_point) are kept, to not zoom in/out. The camera up direction is set to       
@@ -244,22 +246,27 @@ def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=Fa
     # The problem is that we rotate the camera about the sketch plane, while a user might expect the
     # camera to rotate about the center (center of gravity?) of the seen object.
 
+
+    ###### possible to use boundingBox as a more general input? or is there a general plane/normal+origin?
+
     # Make sure we have unit vectors
-    sketch_x = sketch.xDirection
     sketch_x.normalize()
-    sketch_y = sketch.yDirection
     sketch_y.normalize()
 
     camera = app_.activeViewport.camera
 
-    # normal will be a unit vector since x and y are perpendicular
-    sketch_normal_vector = sketch_x.crossProduct(sketch_y)
+    if sketch_normal:
+        sketch_normal_vector = sketch_normal.copy()
+        sketch_normal_vector.normalize()
+    else:
+        # normal will be a unit vector since x and y are perpendicular
+        sketch_normal_vector = sketch_x.crossProduct(sketch_y)
 
     # Vector target->eye
     target_eye_vector = camera.target.vectorTo(camera.eye)
 
     target_eye_line = adsk.core.InfiniteLine3D.create(camera.target, target_eye_vector)
-    sketch_plane = adsk.core.Plane.create(sketch.origin, sketch_normal_vector)
+    sketch_plane = adsk.core.Plane.create(sketch_origin, sketch_normal_vector)
 
     plane_point = sketch_plane.intersectWithLine(target_eye_line)
     if plane_point is None:
@@ -270,7 +277,7 @@ def view_normal_to_sketch(sketch, center_on_origin=False, ninety_degree_steps=Fa
     # Determine if the eye vector is looking mostly along or opposite the sketch normal
     eye_sign = math.copysign(1, target_eye_vector.dotProduct(sketch_normal_vector))
 
-    center_point = sketch.origin.copy() if center_on_origin else plane_point.copy()
+    center_point = sketch_origin.copy() if center_on_origin else plane_point.copy()
 
     # Experiment: Rotate about the mouse    
     # mouse_2d = app_.activeViewport.screenToView(win32_mouse_pos())
@@ -344,6 +351,13 @@ def view_normal_to_object(entity):
     if isinstance(entity, adsk.fusion.Profile):
         # Sketch profile
         profile: adsk.fusion.Profile = entity
+        # UV is for something else..?
+        # Just make up two perpendicular vectors
+        vector1 = profile.plane.normal.copy()
+        vector1.transformBy(rot_matrix)
+        vector2 = vector1.copy()
+        vector2.transformBy(rot_matrix)
+        view_normal_to(profile.plane.origin, vector1, vector2, profile.plane.normal)
     elif isinstance(entity, adsk.fusion.BRepFace):
         face: adsk.fusion.BRepFace = entity
         # Surface (face.geometry) classes:
