@@ -400,22 +400,23 @@ def add_builtin_dropdown(parent):
     view_orientation_dropdown = builtin_dropdown_.controls.addDropDown('View Orientation', './resources/viewfront',
                                                            'thomasa88_anyShortcutBuiltinViewOrientationList')
     for view in ['Front', 'Back', 'Top', 'Bottom', 'Left', 'Right']:
-        c = create('thomasa88_anyShortcutBuiltinView' + view,
+        c = create('thomasa88_anyShortcutBuiltinViewOrientationList' + view,
             'View ' + view,
             '',
             './resources/view' + view.lower(),
             create_view_orientation_handler(view))
         view_orientation_dropdown.controls.addCommand(c)
 
-    view_corner_dropdown = builtin_dropdown_.controls.addDropDown('View Orientation', './resources/viewfront',
+    view_corner_dropdown = builtin_dropdown_.controls.addDropDown('View Orientation', './resources/viewisotopright',
                                                            'thomasa88_anyShortcutBuiltinViewCornerList')
-    for view in ['Front', 'Back', 'Top', 'Bottom', 'Left', 'Right']:
-        c = create('thomasa88_anyShortcutBuiltinView' + view,
-            'View ' + view,
+    for view in ['IsoTopRight', 'IsoTopLeft','IsoBottomRight', 'IsoBottomLeft' ]:
+        c = create('thomasa88_anyShortcutBuiltinViewCornerList' + view,
+            'View ' + view.strip('Iso'),
             '',
             './resources/view' + view.lower(),
             create_view_orientation_handler(view))
         view_corner_dropdown.controls.addCommand(c)
+
 
 def run(context):
     global app_
