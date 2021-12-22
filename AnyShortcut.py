@@ -397,15 +397,25 @@ def add_builtin_dropdown(parent):
     #     create_roll_history_handler('play'))
     # timeline_dropdown.controls.addCommand(c)
 
-    view_dropdown = builtin_dropdown_.controls.addDropDown('View Orientation', './resources/viewfront',
-                                                           'thomasa88_anyShortcutBuiltinViewList')
+    view_orientation_dropdown = builtin_dropdown_.controls.addDropDown('View Orientation', './resources/viewfront',
+                                                           'thomasa88_anyShortcutBuiltinViewOrientationList')
     for view in ['Front', 'Back', 'Top', 'Bottom', 'Left', 'Right']:
         c = create('thomasa88_anyShortcutBuiltinView' + view,
             'View ' + view,
             '',
             './resources/view' + view.lower(),
             create_view_orientation_handler(view))
-        view_dropdown.controls.addCommand(c)
+        view_orientation_dropdown.controls.addCommand(c)
+
+    view_corner_dropdown = builtin_dropdown_.controls.addDropDown('View Orientation', './resources/viewfront',
+                                                           'thomasa88_anyShortcutBuiltinViewCornerList')
+    for view in ['Front', 'Back', 'Top', 'Bottom', 'Left', 'Right']:
+        c = create('thomasa88_anyShortcutBuiltinView' + view,
+            'View ' + view,
+            '',
+            './resources/view' + view.lower(),
+            create_view_orientation_handler(view))
+        view_corner_dropdown.controls.addCommand(c)
 
 def run(context):
     global app_
