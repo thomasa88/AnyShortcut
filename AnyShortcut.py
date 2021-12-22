@@ -237,7 +237,7 @@ def create_view_orientation_handler(view_orientation_name):
         args.command.isRepeatable = False
 
         camera_copy = app_.activeViewport.camera
-        camera_copy.cameraType = adsk.core.CameraTypes.OrthographicCameraType #?
+#         camera_copy.cameraType = adsk.core.CameraTypes.OrthographicCameraType #?
         camera_copy.viewOrientation = getattr(adsk.core.ViewOrientations,
                                               view_orientation_name + 'ViewOrientation')
         app_.activeViewport.camera = camera_copy
