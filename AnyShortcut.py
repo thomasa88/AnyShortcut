@@ -156,6 +156,11 @@ def update_enable_text():
         enable_cmd_def_.resourceFolder = './resources/record'
     enable_cmd_def_.controlDefinition.name = text
 
+def clear_selections():
+    # Workaround for RuntimeError: 2 : InternalValidationError : selecCmd
+    # that sometimes happen when trying to do ui_.activeSelections.clear()
+    ui_.activeSelections.all = adsk.core.ObjectCollection.create()
+
 def look_at_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
     # Look at is usually not added to the history - skip execution.
     # Avoid getting listed as a repeatable command.
@@ -164,7 +169,7 @@ def look_at_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
     if edit_object.classType() == 'adsk::fusion::Sketch':
         # laughingcreek provided the way that Fusion actually does this "Look At"
         # https://forums.autodesk.com/t5/fusion-360-design-validate/shortcut-for-look-at/m-p/9517669/highlight/true#M217044
-        ui_.activeSelections.clear()
+        clear_selections()
         ui_.activeSelections.add(edit_object)
         ui_.commandDefinitions.itemById('LookAtCommand').execute()
 
@@ -174,8 +179,7 @@ def look_at_sketch_handler(args: adsk.core.CommandCreatedEventArgs):
         # the wait.
         on_command_terminate('LookAtCommand',
                              adsk.core.CommandTerminationReason.CancelledTerminationReason,
-                             lambda: ui_.activeSelections.clear())
-        #events_manager_.delay(lambda: ui_.activeSelections.clear(), secs=1)
+                             clear_selections)
 
 def look_at_sketch_or_selected_handler(args: adsk.core.CommandCreatedEventArgs):
     # Look at is usually not added to the history - skip execution handler.
@@ -194,7 +198,7 @@ def activate_containing_component_handler(args: adsk.core.CommandCreatedEventArg
         selected = ui_.activeSelections[0].entity
         if selected.classType() not in ['adsk::fusion::Component', 'adsk::fusion::Occurrence']:
             # Component not selected. Select the component.
-            ui_.activeSelections.clear()
+            clear_selections()
             if selected.assemblyContext is None:
                 # Root component
                 ui_.activeSelections.add(app_.activeProduct.rootComponent)
