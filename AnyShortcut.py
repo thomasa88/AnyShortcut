@@ -241,7 +241,7 @@ def create_view_orientation_handler(view_orientation_name):
         args.command.isRepeatable = False
 
         camera_copy = app_.activeViewport.camera
-        camera_copy.cameraType = adsk.core.CameraTypes.OrthographicCameraType #?
+#         camera_copy.cameraType = adsk.core.CameraTypes.OrthographicCameraType #?
         camera_copy.viewOrientation = getattr(adsk.core.ViewOrientations,
                                               view_orientation_name + 'ViewOrientation')
         app_.activeViewport.camera = camera_copy
@@ -401,15 +401,26 @@ def add_builtin_dropdown(parent):
     #     create_roll_history_handler('play'))
     # timeline_dropdown.controls.addCommand(c)
 
-    view_dropdown = builtin_dropdown_.controls.addDropDown('View Orientation', './resources/viewfront',
-                                                           'thomasa88_anyShortcutBuiltinViewList')
+    view_orientation_dropdown = builtin_dropdown_.controls.addDropDown('View Orientation', './resources/viewfront',
+                                                           'thomasa88_anyShortcutBuiltinViewOrientationList')
     for view in ['Front', 'Back', 'Top', 'Bottom', 'Left', 'Right']:
-        c = create('thomasa88_anyShortcutBuiltinView' + view,
+        c = create('thomasa88_anyShortcutBuiltinViewOrientationList' + view,
             'View ' + view,
             '',
             './resources/view' + view.lower(),
             create_view_orientation_handler(view))
-        view_dropdown.controls.addCommand(c)
+        view_orientation_dropdown.controls.addCommand(c)
+
+    view_corner_dropdown = builtin_dropdown_.controls.addDropDown('View Orientation', './resources/viewisotopright',
+                                                           'thomasa88_anyShortcutBuiltinViewCornerList')
+    for view in ['IsoTopRight', 'IsoTopLeft','IsoBottomRight', 'IsoBottomLeft' ]:
+        c = create('thomasa88_anyShortcutBuiltinViewCornerList' + view,
+            'View ' + view.strip('Iso'),
+            '',
+            './resources/view' + view.lower(),
+            create_view_orientation_handler(view))
+        view_corner_dropdown.controls.addCommand(c)
+
 
 def run(context):
     global app_
